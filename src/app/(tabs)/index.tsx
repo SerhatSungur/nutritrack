@@ -1,14 +1,14 @@
 import {
-    View, Text, ScrollView, TouchableOpacity,
-    Dimensions,
-    Modal, FlatList,
+    View, Text, ScrollView,
+    Dimensions, Pressable, TouchableOpacity,
+    Modal, FlatList, TextInput,
 } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLogStore, MealType, Recipe } from '../../store/useLogStore';
 import { format, subDays, addDays, isSameDay } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { Plus, Droplets, BookOpen, ChevronRight, X } from 'lucide-react-native';
+import { Plus, Droplets, BookOpen, ChevronRight, X, Scale, Info, Check } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { haptics } from '../../lib/haptics';
 import { useRef, useEffect, useState, useCallback, memo } from 'react';
@@ -44,18 +44,11 @@ const MacroRing = memo(({ value, goal, color, size = 72, strokeWidth = 7, label,
     const displayValue = displayMacroMode === 'remaining' ? remaining : value;
 
     useEffect(() => {
-        // Reset progress on mount to ensure a visible refill every time
         progress.value = 0;
-
-        // Entrance scale-in
         ringScale.value = withTiming(1, { duration: 800, easing: Easing.bezier(0.33, 1, 0.68, 1) });
-
-        // Fill progress with liquid easing
         progress.value = withTiming(Math.min(value / Math.max(goal, 1), 1), {
             duration: 1200, easing: Easing.bezier(0.33, 1, 0.68, 1),
         });
-
-        // Interactive pulse on value change
         pulseScale.value = withSequence(
             withTiming(1.12, { duration: 150, easing: Easing.out(Easing.quad) }),
             withTiming(1, { duration: 300, easing: Easing.bezier(0.33, 1, 0.68, 1) })
@@ -111,18 +104,11 @@ const CalorieRing = memo(({ consumed, goal, isDark }: { consumed: number; goal: 
     const labelSuffix = displayMacroMode === 'remaining' ? 'übrig' : 'gegessen';
 
     useEffect(() => {
-        // Reset progress on mount to ensure a visible refill every time
         progress.value = 0;
-
-        // Entrance scale-in
         ringScale.value = withTiming(1, { duration: 1000, easing: Easing.bezier(0.33, 1, 0.68, 1) });
-
-        // Fill progress with liquid easing
         progress.value = withTiming(Math.min(consumed / Math.max(goal, 1), 1), {
             duration: 1500, easing: Easing.bezier(0.33, 1, 0.68, 1),
         });
-
-        // Interactive pulse on value change
         pulseScale.value = withSequence(
             withTiming(1.08, { duration: 150, easing: Easing.out(Easing.quad) }),
             withTiming(1, { duration: 300, easing: Easing.bezier(0.33, 1, 0.68, 1) })
@@ -163,69 +149,97 @@ const CalorieRing = memo(({ consumed, goal, isDark }: { consumed: number; goal: 
 });
 
 // ─── Water Card ───────────────────────────────────────────────────────────────
-function WaterCard({ isDark }: { isDark: boolean }) {
-    const waterIntake = useLogStore((s) => s.waterIntake);
+function WaterCard({ isDark, date }: { isDark: boolean, date: string }) {
+    const waterHistory = useLogStore((s) => s.waterHistory);
     const waterGoal = useLogStore((s) => s.waterGoal);
     const addWater = useLogStore((s) => s.addWater);
+
+    // Get intake for the specific date
+    const waterIntake = waterHistory.find(h => h.date === date)?.value || 0;
+
     const progress = useSharedValue(0);
+    const waveOffset = useSharedValue(0);
 
     const liters = (waterIntake / 1000).toFixed(1);
     const goalLiters = (waterGoal / 1000).toFixed(1);
     const AMOUNTS = [250, 350, 500];
 
     useEffect(() => {
-        progress.value = 0;
         progress.value = withTiming(Math.min(waterIntake / waterGoal, 1), {
             duration: 1000,
             easing: Easing.bezier(0.33, 1, 0.68, 1),
         });
+        waveOffset.value = withSequence(
+            withTiming(1, { duration: 400 }),
+            withTiming(0, { duration: 400 })
+        );
     }, [waterIntake, waterGoal]);
 
     const animatedBarStyle = useAnimatedStyle(() => ({
         width: `${progress.value * 100}%`,
+        opacity: interpolate(progress.value, [0, 0.1, 1], [0.3, 1, 1])
+    }));
+
+    const waveStyle = useAnimatedStyle(() => ({
+        transform: [{ translateY: interpolate(waveOffset.value, [0, 1], [0, -4]) }],
     }));
 
     return (
-        <View className="bg-card dark:bg-zinc-900 rounded-2xl p-5 mb-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-            <View className="flex-row justify-between items-center mb-4">
-                <View className="flex-row items-center gap-x-2.5">
-                    <View className="bg-blue-50 dark:bg-blue-900/40 p-1.5 rounded-lg">
-                        <Droplets size={18} color="#3B82F6" />
+        <View className="bg-card dark:bg-zinc-900 rounded-3xl p-6 mb-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100/50 dark:border-zinc-800/50">
+            <View className="flex-row justify-between items-center mb-5">
+                <View className="flex-row items-center gap-x-3">
+                    <View className="bg-blue-50 dark:bg-blue-500/10 w-11 h-11 rounded-2xl items-center justify-center">
+                        <Droplets size={22} color="#3B82F6" />
                     </View>
-                    <Text className="text-lg font-extrabold text-text dark:text-zinc-50">Wasser</Text>
+                    <View>
+                        <Text className="text-lg font-extrabold text-text dark:text-zinc-50">Wasseraufnahme</Text>
+                        <Text className="text-xs font-semibold text-textLight dark:text-zinc-500 uppercase tracking-widest">Tagesziel: {goalLiters}L</Text>
+                    </View>
                 </View>
-                <Text className="text-base font-bold text-primary">
-                    {liters}L <Text className="text-textLight dark:text-zinc-500 font-medium text-sm">/ {goalLiters}L</Text>
-                </Text>
+                <View className="items-end">
+                    <Text className="text-2xl font-black text-primary">{liters}L</Text>
+                    <Text className="text-[10px] font-bold text-textLight dark:text-zinc-500 uppercase">Aufgenommen</Text>
+                </View>
             </View>
 
-            <View className="h-2.5 w-full bg-blue-100 dark:bg-blue-950/50 rounded-full overflow-hidden mb-4">
+            <View className="h-4 w-full bg-blue-50 dark:bg-blue-950/30 rounded-full overflow-hidden mb-6 border border-blue-100/30 dark:border-blue-900/20">
                 <Animated.View
-                    style={[{ height: '100%', backgroundColor: '#3B82F6', borderRadius: 9999 }, animatedBarStyle]}
+                    style={[{ height: '100%', backgroundColor: '#3B82F6', borderRadius: 9999 }, animatedBarStyle, waveStyle]}
                 />
             </View>
 
-            <View className="flex-row gap-x-2">
-                {AMOUNTS.map(ml => (
-                    <TouchableOpacity
-                        key={ml}
-                        onPress={() => {
-                            const isGoalReached = waterIntake >= waterGoal;
-                            addWater(ml);
-
-                            // If this sip reaches or exceeds the goal for the first time
-                            if (!isGoalReached && (waterIntake + ml) >= waterGoal) {
-                                haptics.success();
-                            } else {
-                                haptics.lightImpact();
-                            }
-                        }}
-                        className="flex-1 items-center py-2.5 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100/50 dark:border-blue-900/30"
-                        activeOpacity={0.7}
-                    >
-                        <Text className="text-[13px] font-bold text-blue-600 dark:text-blue-400">+{ml}ml</Text>
-                    </TouchableOpacity>
-                ))}
+            <View className="flex-row gap-x-3">
+                {AMOUNTS.map(ml => {
+                    const bgColor = isDark ? '#27272A' : '#F9FAFB';
+                    const borderColor = isDark ? '#3F3F46' : '#F3F4F6';
+                    return (
+                        <TouchableOpacity
+                            key={ml}
+                            activeOpacity={0.7}
+                            onPress={() => {
+                                const isGoalReached = waterIntake >= waterGoal;
+                                addWater(ml, date);
+                                if (!isGoalReached && (waterIntake + ml) >= waterGoal) {
+                                    haptics.success();
+                                } else {
+                                    haptics.lightImpact();
+                                }
+                            }}
+                            style={{
+                                flex: 1,
+                                alignItems: 'center',
+                                paddingVertical: 12,
+                                backgroundColor: bgColor,
+                                borderRadius: 16,
+                                borderWidth: 1,
+                                borderColor: borderColor,
+                            }}
+                        >
+                            <Text style={{ fontSize: 14, fontWeight: '900', color: isDark ? '#FAFAFA' : '#09090B' }}>+{ml}</Text>
+                            <Text style={{ fontSize: 10, fontWeight: '700', color: isDark ? '#71717A' : '#9CA3AF', textTransform: 'uppercase' }}>ml</Text>
+                        </TouchableOpacity>
+                    );
+                })}
             </View>
         </View>
     );
@@ -264,6 +278,7 @@ const MealSection = ({ title, type, onAddPress }: { title: string; type: MealTyp
             )}
 
             <TouchableOpacity
+                activeOpacity={0.7}
                 onPress={() => {
                     haptics.lightImpact();
                     onAddPress(type);
@@ -293,7 +308,6 @@ function RecipePickerModal({
     const addLog = useLogStore((s) => s.addLog);
     const currentDate = useLogStore((s) => s.currentDate);
 
-    // Sort: most used first (count how many times each recipe appears in logs by name match)
     const usageCount = useCallback((name: string) =>
         allLogs.filter(l => l.name === name).length
         , [allLogs]);
@@ -327,7 +341,6 @@ function RecipePickerModal({
     };
 
     const sheetBg = isDark ? '#18181B' : '#FFFFFF';
-    const pageBg = isDark ? '#09090B' : '#F4F4F5';
     const textPrimary = isDark ? '#FAFAFA' : '#09090B';
     const textSecondary = isDark ? '#A1A1AA' : '#71717A';
     const border = isDark ? '#27272A' : '#F3F4F6';
@@ -340,7 +353,6 @@ function RecipePickerModal({
             onRequestClose={onClose}
         >
             <SafeAreaView style={{ flex: 1, backgroundColor: sheetBg }} edges={['top']}>
-                {/* Header */}
                 <View style={{
                     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
                     paddingHorizontal: 24, paddingTop: 16, paddingBottom: 20,
@@ -354,19 +366,20 @@ function RecipePickerModal({
                             </Text>
                         )}
                     </View>
-                    <TouchableOpacity
+                    <Pressable
                         onPress={() => {
                             haptics.lightImpact();
                             onClose();
                         }}
-                        style={{
+                        style={({ pressed }) => ({
                             width: 36, height: 36,
                             backgroundColor: isDark ? '#27272A' : '#F3F4F6',
-                            borderRadius: 18, alignItems: 'center', justifyContent: 'center'
-                        }}
+                            borderRadius: 18, alignItems: 'center', justifyContent: 'center',
+                            opacity: pressed ? 0.7 : 1
+                        })}
                     >
                         <X size={20} color={textSecondary} />
-                    </TouchableOpacity>
+                    </Pressable>
                 </View>
 
                 {sorted.length === 0 ? (
@@ -376,64 +389,62 @@ function RecipePickerModal({
                         <Text style={{ fontSize: 14, color: textSecondary, textAlign: 'center', marginBottom: 24 }}>
                             Erstelle dein erstes Rezept, um es hier schnell zu einem Gericht hinzuzufügen.
                         </Text>
-                        <TouchableOpacity
+                        <Pressable
                             onPress={() => {
                                 haptics.lightImpact();
                                 onCreateNew();
                             }}
-                            style={{ backgroundColor: '#2563EB', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 14 }}
+                            style={({ pressed }) => ({
+                                backgroundColor: '#2563EB',
+                                paddingHorizontal: 24,
+                                paddingVertical: 12,
+                                borderRadius: 14,
+                                opacity: pressed ? 0.8 : 1
+                            })}
                         >
                             <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 15 }}>+ Neues Rezept erstellen</Text>
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
                 ) : (
                     <FlatList
                         data={sorted}
                         keyExtractor={(r) => r.id}
                         contentContainerStyle={{ padding: 16 }}
-                        ListHeaderComponent={
-                            sorted.length > 0 ? (
-                                <Text style={{ fontSize: 12, fontWeight: '600', color: textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
-                                    {usageCount(sorted[0].name) > 0 ? 'Nach Häufigkeit sortiert' : 'Alphabetisch sortiert'}
-                                </Text>
-                            ) : null
-                        }
-                        renderItem={({ item: recipe }) => {
-                            return (
-                                <TouchableOpacity
-                                    onPress={() => handleAdd(recipe)}
-                                    activeOpacity={0.75}
-                                    style={{
-                                        backgroundColor: isDark ? '#27272A' : '#F9FAFB',
-                                        borderRadius: 18, padding: 18, marginBottom: 12,
-                                        flexDirection: 'row', alignItems: 'center',
-                                    }}
-                                >
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={{ fontSize: 17, fontWeight: '800', color: textPrimary, marginBottom: 4 }}>{recipe.name}</Text>
-                                        <Text style={{ fontSize: 13, color: textSecondary }}>
-                                            {recipe.totalCalories} kcal · P {recipe.totalProtein}g · K {recipe.totalCarbs}g · F {recipe.totalFat}g
-                                        </Text>
-                                        <Text style={{ fontSize: 12, color: isDark ? '#52525B' : '#9CA3AF', marginTop: 4 }}>
-                                            {recipe.ingredients.length} {recipe.ingredients.length === 1 ? 'Zutat' : 'Zutaten'}
-                                        </Text>
-                                    </View>
-                                    <ChevronRight size={20} color={isDark ? '#52525B' : '#D1D5DB'} />
-                                </TouchableOpacity>
-                            );
-                        }}
+                        renderItem={({ item: recipe }) => (
+                            <Pressable
+                                onPress={() => handleAdd(recipe)}
+                                style={({ pressed }) => ({
+                                    backgroundColor: isDark ? '#27272A' : '#F9FAFB',
+                                    borderRadius: 18, padding: 18, marginBottom: 12,
+                                    flexDirection: 'row', alignItems: 'center',
+                                    opacity: pressed ? 0.7 : 1
+                                })}
+                            >
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 17, fontWeight: '800', color: textPrimary, marginBottom: 4 }}>{recipe.name}</Text>
+                                    <Text style={{ fontSize: 13, color: textSecondary }}>
+                                        {recipe.totalCalories} kcal · P {recipe.totalProtein}g · K {recipe.totalCarbs}g · F {recipe.totalFat}g
+                                    </Text>
+                                    <Text style={{ fontSize: 12, color: isDark ? '#52525B' : '#9CA3AF', marginTop: 4 }}>
+                                        {recipe.ingredients.length} {recipe.ingredients.length === 1 ? 'Zutat' : 'Zutaten'}
+                                    </Text>
+                                </View>
+                                <ChevronRight size={20} color={isDark ? '#52525B' : '#D1D5DB'} />
+                            </Pressable>
+                        )}
                         ListFooterComponent={
-                            <TouchableOpacity
+                            <Pressable
                                 onPress={onCreateNew}
-                                style={{
+                                style={({ pressed }) => ({
                                     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
                                     paddingVertical: 14, borderRadius: 14, marginTop: 4,
-                                    borderWidth: 1.5, borderColor: '#2563EB', borderStyle: 'dashed'
-                                }}
+                                    borderWidth: 1.5, borderColor: '#2563EB', borderStyle: 'dashed',
+                                    opacity: pressed ? 0.7 : 1
+                                })}
                             >
                                 <Plus size={18} color="#2563EB" />
                                 <Text style={{ marginLeft: 6, color: '#2563EB', fontWeight: '700', fontSize: 14 }}>Neues Rezept erstellen</Text>
-                            </TouchableOpacity>
+                            </Pressable>
                         }
                     />
                 )}
@@ -443,9 +454,6 @@ function RecipePickerModal({
 }
 
 // ─── Dashboard Screen ─────────────────────────────────────────────────────────
-// Strategy: put ALL content in ONE animated scrollview.
-// A small floating title bar sits on top (absolute) and fades in when scrolled past the header.
-// The macro header block just scrolls away naturally — no height animation, buttery smooth.
 export default function DashboardScreen() {
     const currentDate = useLogStore((state) => state.currentDate);
     const setDate = useLogStore((state) => state.setDate);
@@ -455,7 +463,6 @@ export default function DashboardScreen() {
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === 'dark';
 
-    // Recipe picker modal state
     const [pickerMeal, setPickerMeal] = useState<MealType | null>(null);
     const pickerVisible = pickerMeal !== null;
     const openPicker = (meal: MealType) => setPickerMeal(meal);
@@ -480,7 +487,6 @@ export default function DashboardScreen() {
     const dateScrollRef = useRef<ScrollView>(null);
     const scrollY = useSharedValue(0);
 
-    // Scroll date strip to today on mount
     useEffect(() => {
         const index = STATIC_WEEK_DATES.findIndex(d => isSameDay(d, currentDate));
         if (index !== -1) {
@@ -490,9 +496,8 @@ export default function DashboardScreen() {
                 dateScrollRef.current?.scrollTo({ x: Math.max(0, center), animated: false });
             }, 100);
         }
-    }, []);
+    }, [currentDate]);
 
-    // This runs entirely on the UI thread — no JS bridge involvement during scroll
     const scrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
             'worklet';
@@ -500,13 +505,6 @@ export default function DashboardScreen() {
         },
     });
 
-    // The floating mini-header title fades in after scrolling ~120px
-    // Fade in the compact title only after the rings have fully scrolled away
-    const stickyTitleStyle = useAnimatedStyle(() => ({
-        opacity: interpolate(scrollY.value, [180, 240], [0, 1], Extrapolation.CLAMP),
-    }));
-
-    // Keep the header fully visible until ~150px, then fade out quickly
     const headerFadeStyle = useAnimatedStyle(() => ({
         opacity: interpolate(scrollY.value, [150, 240], [1, 0], Extrapolation.CLAMP),
     }));
@@ -520,7 +518,6 @@ export default function DashboardScreen() {
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: cardBg }} edges={['top']}>
-            {/* ── Sticky floating title bar (always on top) ── */}
             <View style={{
                 backgroundColor: cardBg,
                 paddingHorizontal: 20,
@@ -537,18 +534,23 @@ export default function DashboardScreen() {
                 }}>
                     {format(currentDate, 'MMMM yyyy', { locale: de })}
                 </Text>
-                <TouchableOpacity
+                <Pressable
                     onPress={() => {
                         haptics.lightImpact();
                         setDate(new Date());
                     }}
-                    style={{ backgroundColor: isDark ? '#27272A' : '#F3F4F6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 }}
+                    style={({ pressed }) => ({
+                        backgroundColor: isDark ? '#27272A' : '#F3F4F6',
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        borderRadius: 999,
+                        opacity: pressed ? 0.7 : 1
+                    })}
                 >
                     <Text style={{ fontSize: 12, fontWeight: '600', color: textSecondary }}>Heute</Text>
-                </TouchableOpacity>
+                </Pressable>
             </View>
 
-            {/* ── Single animated scrollview containing everything ── */}
             <AnimatedScrollView
                 onScroll={scrollHandler}
                 scrollEventThrottle={16}
@@ -556,7 +558,6 @@ export default function DashboardScreen() {
                 contentContainerStyle={{ paddingBottom: 24 }}
                 style={{ flex: 1, backgroundColor: cardBg }}
             >
-                {/* ── Date strip (scrolls away naturally) ── */}
                 <Animated.View style={headerFadeStyle}>
                     <ScrollView
                         ref={dateScrollRef}
@@ -567,18 +568,19 @@ export default function DashboardScreen() {
                         {STATIC_WEEK_DATES.map((date) => {
                             const selected = isSameDay(date, currentDate);
                             return (
-                                <TouchableOpacity
+                                <Pressable
                                     key={date.toISOString()}
                                     onPress={() => {
                                         haptics.selection();
                                         setDate(date);
                                     }}
-                                    style={[
+                                    style={({ pressed }) => ([
                                         { alignItems: 'center', justifyContent: 'center', marginRight: 8, borderRadius: 14, width: 48, height: 56 },
                                         selected
                                             ? { backgroundColor: '#2563EB' }
-                                            : { backgroundColor: dateBg, borderWidth: 1, borderColor: dateBorder }
-                                    ]}
+                                            : { backgroundColor: dateBg, borderWidth: 1, borderColor: dateBorder },
+                                        { opacity: pressed ? 0.7 : 1 }
+                                    ])}
                                 >
                                     <Text style={{ fontSize: 11, fontWeight: '500', marginBottom: 2, color: selected ? 'rgba(255,255,255,0.8)' : textSecondary }}>
                                         {format(date, 'EEE', { locale: de })}
@@ -586,15 +588,13 @@ export default function DashboardScreen() {
                                     <Text style={{ fontSize: 16, fontWeight: 'bold', color: selected ? '#FFFFFF' : textPrimary }}>
                                         {format(date, 'd')}
                                     </Text>
-                                </TouchableOpacity>
+                                </Pressable>
                             );
                         })}
                     </ScrollView>
 
-                    {/* ── Macro rings ── */}
                     <View style={{ alignItems: 'center', paddingHorizontal: 20, paddingTop: 4, paddingBottom: 20 }}>
                         <CalorieRing consumed={totals.calories} goal={macroGoals.calories} isDark={isDark} />
-
                         <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%', marginTop: 16 }}>
                             <MacroRing value={totals.protein} goal={macroGoals.protein} color="#3B82F6" label="Protein" isDark={isDark} />
                             <MacroRing value={totals.carbs} goal={macroGoals.carbs} color="#F59E0B" label="Kohlenhydrate" isDark={isDark} />
@@ -603,11 +603,16 @@ export default function DashboardScreen() {
                     </View>
                 </Animated.View>
 
-                {/* ── Scrollable cards on page background ── */}
-                <View style={{ backgroundColor: pageBg, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 16, paddingHorizontal: 16, minHeight: 600 }}>
-                    <Animated.View entering={FadeInDown.delay(400).duration(600)}>
-                        <WaterCard isDark={isDark} />
+                <View style={{ backgroundColor: pageBg, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 24, paddingHorizontal: 16, minHeight: 800 }}>
+                    <Animated.View entering={FadeInDown.delay(300).duration(600)}>
+                        <WaterCard isDark={isDark} date={currentDate.toISOString().split('T')[0]} />
                     </Animated.View>
+
+                    <View className="flex-row items-center gap-x-2 mb-4 ml-1">
+                        <BookOpen size={20} color={textSecondary} />
+                        <Text className="text-sm font-bold text-textLight dark:text-zinc-500 uppercase tracking-widest">Mahlzeiten</Text>
+                    </View>
+
                     <Animated.View entering={FadeInDown.delay(500).duration(600)}>
                         <MealSection title="Frühstück" type="breakfast" onAddPress={openPicker} />
                     </Animated.View>

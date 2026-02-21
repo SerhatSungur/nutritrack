@@ -1,5 +1,30 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import type { FoodItem } from '../lib/api/foodApi';
+import type { UserProfile } from '../lib/nutritionUtils';
+
+const isSameDayString = (d1: string, d2: string) => d1 === d2;
+
+// Defensive storage wrapper to prevent bundling errors if AsyncStorage is missing
+const getDefensiveStorage = (): StateStorage => {
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+        return {
+            getItem: (name) => AsyncStorage.getItem(name),
+            setItem: (name, value) => AsyncStorage.setItem(name, value),
+            removeItem: (name) => AsyncStorage.removeItem(name),
+        };
+    } catch (e) {
+        // Fallback to in-memory storage if AsyncStorage is not available
+        const memoryStorage = new Map<string, string>();
+        return {
+            getItem: (name) => memoryStorage.get(name) || null,
+            setItem: (name, value) => memoryStorage.set(name, value),
+            removeItem: (name) => memoryStorage.delete(name),
+        };
+    }
+};
 
 export type MacroTotals = {
     calories: number;
@@ -46,15 +71,25 @@ export type Recipe = {
     notes?: string;
 };
 
+export type HistoryEntry = {
+    date: string;
+    value: number;
+};
+
 interface LogState {
     currentDate: Date;
     logs: DailyLog[];
     recipes: Recipe[];
     macroGoals: MacroTotals;
+    userProfile: UserProfile;
 
     // Water tracking
     waterIntake: number; // ml for current date
     waterGoal: number;   // ml target
+
+    // History data
+    weightHistory: HistoryEntry[];
+    waterHistory: HistoryEntry[];
 
     // Recent & favorite foods
     recentFoods: FoodItem[];
@@ -65,6 +100,7 @@ interface LogState {
 
     // Actions
     setMacroGoals: (goals: MacroTotals) => void;
+    setUserProfile: (profile: Partial<UserProfile>) => void;
     setDate: (date: Date) => void;
     addLog: (log: Omit<DailyLog, 'id' | 'date'> & { date?: string }) => void;
     addRecipe: (recipe: Omit<Recipe, 'id' | 'totalCalories' | 'totalProtein' | 'totalCarbs' | 'totalFat'>) => void;
@@ -72,9 +108,13 @@ interface LogState {
     getDailyTotals: () => MacroTotals;
     getLogsByMeal: (meal: MealType) => DailyLog[];
 
-    addWater: (ml: number) => void;
+    addWater: (ml: number, date?: string) => void;
     setWaterGoal: (ml: number) => void;
     resetWater: () => void;
+
+    addWeight: (weight: number, date?: string) => void;
+
+    deleteRecipe: (id: string) => void;
 
     addRecentFood: (food: FoodItem) => void;
     toggleFavorite: (food: FoodItem) => void;
@@ -83,100 +123,210 @@ interface LogState {
     setDisplayMacroMode: (mode: 'remaining' | 'consumed') => void;
 }
 
-export const useLogStore = create<LogState>((set, get) => ({
-    currentDate: new Date(),
-    logs: [
-        { id: '1', meal_type: 'breakfast', name: 'Oatmeal & Berries', calories: 320, protein: 12, carbs: 45, fat: 6, date: new Date().toISOString().split('T')[0] },
-        { id: '2', meal_type: 'lunch', name: 'Chicken Salad', calories: 450, protein: 35, carbs: 12, fat: 18, date: new Date().toISOString().split('T')[0] }
-    ],
-    recipes: [],
-    macroGoals: { calories: 2400, protein: 150, carbs: 250, fat: 80 },
-
-    waterIntake: 0,
-    waterGoal: 2500,
-
-    recentFoods: [],
-    favoriteFoods: [],
-
-    displayMacroMode: 'remaining',
-
-    setMacroGoals: (goals) => set({ macroGoals: goals }),
-    setDate: (date) => set({ currentDate: date }),
-
-    addLog: (log) => set((state) => {
-        const logDate = log.date || state.currentDate.toISOString().split('T')[0];
-        return {
-            logs: [...state.logs, { ...log, id: Math.random().toString(), date: logDate }]
-        };
-    }),
-
-    addRecipe: (recipeData) => set((state) => {
-        const totals = recipeData.ingredients.reduce(
-            (acc, ing) => {
-                const actualGrams = ing.useServing && ing.servingQuantity ? ing.amount * ing.servingQuantity : ing.amount;
-                const factor = actualGrams / 100;
-                return {
-                    calories: acc.calories + ing.caloriesPer100g * factor,
-                    protein: acc.protein + ing.proteinPer100g * factor,
-                    carbs: acc.carbs + ing.carbsPer100g * factor,
-                    fat: acc.fat + ing.fatPer100g * factor,
-                };
+export const useLogStore = create<LogState>()(
+    persist(
+        (set, get) => ({
+            currentDate: new Date(),
+            logs: [
+                { id: '1', meal_type: 'breakfast', name: 'Oatmeal & Berries', calories: 320, protein: 12, carbs: 45, fat: 6, date: new Date().toISOString().split('T')[0] },
+                { id: '2', meal_type: 'lunch', name: 'Chicken Salad', calories: 450, protein: 35, carbs: 12, fat: 18, date: new Date().toISOString().split('T')[0] }
+            ],
+            recipes: [],
+            macroGoals: { calories: 2400, protein: 150, carbs: 250, fat: 80 },
+            userProfile: {
+                age: 30,
+                gender: 'male',
+                weight: 80,
+                height: 180,
+                activityLevel: 1.2,
+                goal: 'maintain',
             },
-            { calories: 0, protein: 0, carbs: 0, fat: 0 }
-        );
-        const newRecipe: Recipe = {
-            ...recipeData,
-            id: Math.random().toString(),
-            totalCalories: Math.round(totals.calories),
-            totalProtein: Math.round(totals.protein),
-            totalCarbs: Math.round(totals.carbs),
-            totalFat: Math.round(totals.fat),
-        };
-        return { recipes: [...state.recipes, newRecipe] };
-    }),
 
-    updateRecipe: (id, updates) => set((state) => ({
-        recipes: state.recipes.map(recipe =>
-            recipe.id === id ? { ...recipe, ...updates } : recipe
-        )
-    })),
+            waterIntake: 0,
+            waterGoal: 2500,
 
-    getDailyTotals: () => {
-        const targetDate = get().currentDate.toISOString().split('T')[0];
-        return get().logs
-            .filter((log) => log.date === targetDate)
-            .reduce((acc, log) => ({
-                calories: acc.calories + log.calories,
-                protein: acc.protein + log.protein,
-                carbs: acc.carbs + log.carbs,
-                fat: acc.fat + log.fat,
-            }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
-    },
+            weightHistory: [],
+            waterHistory: [],
 
-    getLogsByMeal: (meal) => {
-        const targetDate = get().currentDate.toISOString().split('T')[0];
-        return get().logs.filter((l: DailyLog) => l.meal_type === meal && l.date === targetDate);
-    },
+            recentFoods: [],
+            favoriteFoods: [],
 
-    addWater: (ml) => set((state) => ({ waterIntake: Math.max(0, state.waterIntake + ml) })),
-    setWaterGoal: (ml) => set({ waterGoal: ml }),
-    resetWater: () => set({ waterIntake: 0 }),
+            displayMacroMode: 'remaining',
 
-    addRecentFood: (food) => set((state) => {
-        const filtered = state.recentFoods.filter(f => f.id !== food.id);
-        return { recentFoods: [food, ...filtered].slice(0, 10) };
-    }),
+            setMacroGoals: (goals) => set({ macroGoals: goals }),
+            setUserProfile: (updates) => set((state) => {
+                const newProfile = { ...state.userProfile, ...updates };
 
-    toggleFavorite: (food) => set((state) => {
-        const exists = state.favoriteFoods.some(f => f.id === food.id);
-        return {
-            favoriteFoods: exists
-                ? state.favoriteFoods.filter(f => f.id !== food.id)
-                : [food, ...state.favoriteFoods]
-        };
-    }),
+                // If weight changed, add to history
+                let newWeightHistory = state.weightHistory;
+                if (updates.weight !== undefined) {
+                    const today = new Date().toISOString().split('T')[0];
+                    newWeightHistory = [
+                        ...state.weightHistory.filter(h => h.date !== today),
+                        { date: today, value: updates.weight }
+                    ].sort((a, b) => a.date.localeCompare(b.date));
+                }
 
-    isFavorite: (foodId) => get().favoriteFoods.some(f => f.id === foodId),
+                return {
+                    userProfile: newProfile,
+                    weightHistory: newWeightHistory
+                };
+            }),
+            setDate: (date) => set({ currentDate: date }),
 
-    setDisplayMacroMode: (mode) => set({ displayMacroMode: mode }),
-}));
+            addLog: (log) => set((state) => {
+                const logDate = log.date || state.currentDate.toISOString().split('T')[0];
+                return {
+                    logs: [...state.logs, { ...log, id: Math.random().toString(), date: logDate }]
+                };
+            }),
+
+            addRecipe: (recipeData) => set((state) => {
+                const totals = recipeData.ingredients.reduce(
+                    (acc, ing) => {
+                        const actualGrams = ing.useServing && ing.servingQuantity ? ing.amount * ing.servingQuantity : ing.amount;
+                        const factor = actualGrams / 100;
+                        return {
+                            calories: acc.calories + ing.caloriesPer100g * factor,
+                            protein: acc.protein + ing.proteinPer100g * factor,
+                            carbs: acc.carbs + ing.carbsPer100g * factor,
+                            fat: acc.fat + ing.fatPer100g * factor,
+                        };
+                    },
+                    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+                );
+                const newRecipe: Recipe = {
+                    ...recipeData,
+                    id: Math.random().toString(),
+                    totalCalories: Math.round(totals.calories),
+                    totalProtein: Math.round(totals.protein),
+                    totalCarbs: Math.round(totals.carbs),
+                    totalFat: Math.round(totals.fat),
+                };
+                return { recipes: [...state.recipes, newRecipe] };
+            }),
+
+            updateRecipe: (id, updates) => set((state) => ({
+                recipes: state.recipes.map(recipe =>
+                    recipe.id === id ? { ...recipe, ...updates } : recipe
+                )
+            })),
+
+            deleteRecipe: (id) => set((state) => ({
+                recipes: state.recipes.filter(recipe => recipe.id !== id)
+            })),
+
+            getDailyTotals: () => {
+                const targetDate = get().currentDate.toISOString().split('T')[0];
+                return get().logs
+                    .filter((log) => log.date === targetDate)
+                    .reduce((acc, log) => ({
+                        calories: acc.calories + log.calories,
+                        protein: acc.protein + log.protein,
+                        carbs: acc.carbs + log.carbs,
+                        fat: acc.fat + log.fat,
+                    }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+            },
+
+            getLogsByMeal: (meal) => {
+                const targetDate = get().currentDate.toISOString().split('T')[0];
+                return get().logs.filter((l: DailyLog) => l.meal_type === meal && l.date === targetDate);
+            },
+
+            addWater: (ml, date) => set((state) => {
+                const targetDate = date || state.currentDate.toISOString().split('T')[0];
+                const isCurrentDate = isSameDayString(targetDate, state.currentDate.toISOString().split('T')[0]);
+
+                // Update today's live intake if applicable
+                const newIntake = isCurrentDate ? Math.max(0, state.waterIntake + ml) : state.waterIntake;
+
+                // Update history
+                const currentHistoryVal = state.waterHistory.find(h => h.date === targetDate)?.value || 0;
+                const newHistory = [
+                    ...state.waterHistory.filter(h => h.date !== targetDate),
+                    { date: targetDate, value: Math.max(0, currentHistoryVal + ml) }
+                ].sort((a, b) => a.date.localeCompare(b.date));
+
+                return {
+                    waterIntake: newIntake,
+                    waterHistory: newHistory
+                };
+            }),
+            setWaterGoal: (ml) => set({ waterGoal: ml }),
+            resetWater: () => set({ waterIntake: 0, waterHistory: [] }),
+
+            addWeight: (weight, date) => set((state) => {
+                const targetDate = date || new Date().toISOString().split('T')[0];
+                const newHistory = [
+                    ...state.weightHistory.filter(h => h.date !== targetDate),
+                    { date: targetDate, value: weight }
+                ].sort((a, b) => a.date.localeCompare(b.date));
+
+                // Also update the live userProfile if it's the latest entry
+                const latestDate = newHistory[newHistory.length - 1]?.date;
+                const updateProfile = latestDate === targetDate;
+
+                return {
+                    weightHistory: newHistory,
+                    userProfile: updateProfile ? { ...state.userProfile, weight } : state.userProfile
+                };
+            }),
+
+            addRecentFood: (food) => set((state) => {
+                const filtered = state.recentFoods.filter(f => f.id !== food.id);
+                return { recentFoods: [food, ...filtered].slice(0, 10) };
+            }),
+
+            toggleFavorite: (food) => set((state) => {
+                const exists = state.favoriteFoods.some(f => f.id === food.id);
+                return {
+                    favoriteFoods: exists
+                        ? state.favoriteFoods.filter(f => f.id !== food.id)
+                        : [food, ...state.favoriteFoods]
+                };
+            }),
+
+            isFavorite: (foodId) => get().favoriteFoods.some(f => f.id === foodId),
+
+            setDisplayMacroMode: (mode) => set({ displayMacroMode: mode }),
+        }),
+        {
+            name: 'nutritrack-storage',
+            storage: createJSONStorage(() => getDefensiveStorage()),
+            // Don't persist currentDate as we want it to reset to "today" on app start
+            partialize: (state) => {
+                const { currentDate, ...rest } = state;
+                return rest;
+            },
+        }
+    )
+);
+
+// ─── Auto-Sync Subscriber ──────────────────────────────────────────────────
+
+// We use a small timeout to debounce multiple rapid changes
+let syncTimeout: NodeJS.Timeout | null = null;
+
+useLogStore.subscribe((state, prevState) => {
+    // Only sync if certain fields changed
+    const relevantFieldsChanged =
+        state.userProfile !== prevState.userProfile ||
+        state.macroGoals !== prevState.macroGoals ||
+        state.waterGoal !== prevState.waterGoal ||
+        state.logs.length !== prevState.logs.length ||
+        state.recipes.length !== prevState.recipes.length;
+
+    if (relevantFieldsChanged) {
+        if (syncTimeout) clearTimeout(syncTimeout);
+        syncTimeout = setTimeout(async () => {
+            try {
+                // Lazy import syncService to avoid circular dependency
+                const { syncService } = await import('../lib/syncService');
+                await syncService.pushAll();
+            } catch (error) {
+                console.error('Auto-sync failed:', error);
+            }
+        }, 2000); // 2 second debounce
+    }
+});
+

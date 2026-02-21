@@ -7,6 +7,8 @@ import { useFonts, PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJa
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { useAuthStore } from "../store/useAuthStore";
+import { syncService } from "../lib/syncService";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -40,6 +42,19 @@ export default function RootLayout() {
         PlusJakartaSans_700Bold,
         PlusJakartaSans_800ExtraBold,
     });
+
+    const { initialize: initializeAuth, user, initialized: authInitialized } = useAuthStore();
+
+    useEffect(() => {
+        initializeAuth();
+    }, []);
+
+    // Pull cloud data once auth is ready and user exists
+    useEffect(() => {
+        if (authInitialized && user) {
+            syncService.pullAll();
+        }
+    }, [authInitialized, user]);
 
     useEffect(() => {
         if (fontsLoaded || fontError) {
@@ -80,6 +95,13 @@ export default function RootLayout() {
                             presentation: 'fullScreenModal',
                             headerShown: false,
                             animation: 'slide_from_bottom',
+                        }}
+                    />
+                    <Stack.Screen
+                        name="auth/login"
+                        options={{
+                            presentation: 'modal',
+                            headerShown: false,
                         }}
                     />
                     <Stack.Screen name="+not-found" />

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { useEffect, useRef, useState } from 'react';
@@ -88,9 +88,13 @@ export default function ScannerScreen() {
                         <Text style={styles.code}>npx expo install expo-camera</Text>
                     </View>
                     <Text style={styles.notInstalledText}>und starte die App danach neu.</Text>
-                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                    <View
+                        onStartShouldSetResponder={() => true}
+                        onResponderRelease={() => router.back()}
+                        style={styles.backButton}
+                    >
                         <Text style={styles.backButtonText}>Zurück</Text>
-                    </TouchableOpacity>
+                    </View>
                 </View>
             </View>
         );
@@ -111,9 +115,13 @@ export default function ScannerScreen() {
                 <X size={48} color="#EF4444" />
                 <Text style={styles.permText}>Kamera-Zugriff verweigert.</Text>
                 <Text style={styles.permSub}>Bitte erlaube der App Kamerazugriff in den Einstellungen.</Text>
-                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                <View
+                    onStartShouldSetResponder={() => true}
+                    onResponderRelease={() => router.back()}
+                    style={styles.backButton}
+                >
                     <Text style={styles.backButtonText}>Zurück</Text>
-                </TouchableOpacity>
+                </View>
             </View>
         );
     }
@@ -130,9 +138,13 @@ export default function ScannerScreen() {
             <View style={styles.overlay}>
                 {/* Header */}
                 <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
-                    <TouchableOpacity style={styles.closeBtn} onPress={() => router.back()}>
+                    <View
+                        onStartShouldSetResponder={() => true}
+                        onResponderRelease={() => router.back()}
+                        style={styles.closeBtn}
+                    >
                         <X size={22} color="#FFFFFF" />
-                    </TouchableOpacity>
+                    </View>
                     <Text style={styles.headerTitle}>Barcode scannen</Text>
                     <View style={{ width: 44 }} />
                 </Animated.View>
@@ -157,10 +169,14 @@ export default function ScannerScreen() {
                 {/* Bottom controls */}
                 <Animated.View entering={FadeInDown.delay(200)} style={styles.bottomBar}>
                     {scanned && !loading && (
-                        <TouchableOpacity style={styles.rescanBtn} onPress={() => setScanned(false)}>
+                        <View
+                            onStartShouldSetResponder={() => true}
+                            onResponderRelease={() => setScanned(false)}
+                            style={styles.rescanBtn}
+                        >
                             <RotateCcw size={20} color="#2563EB" />
                             <Text style={styles.rescanText}>Nochmals scannen</Text>
-                        </TouchableOpacity>
+                        </View>
                     )}
                     {lastBarcode && (
                         <Text style={styles.barcodeLabel}>Barcode: {lastBarcode}</Text>

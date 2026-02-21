@@ -54,6 +54,14 @@ class HapticsService {
             await pkg.notificationAsync(pkg.NotificationFeedbackType.Error);
         } catch (e) { }
     }
+
+    async warning() {
+        const pkg = this.getPkg();
+        if (!pkg) return;
+        try {
+            await pkg.notificationAsync(pkg.NotificationFeedbackType.Warning);
+        } catch (e) { }
+    }
 }
 
 export const haptics = new HapticsService();

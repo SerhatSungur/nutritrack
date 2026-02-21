@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
+import { View, Text, ScrollView, TextInput, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useLogStore } from '../../store/useLogStore';
 import { ChevronLeft, PlusCircle, Edit2 } from 'lucide-react-native';
@@ -21,9 +21,13 @@ const RecipeDetailScreen = () => {
         return (
             <SafeAreaView className="flex-1 bg-background dark:bg-zinc-950 justify-center items-center">
                 <Text className="text-xl font-bold text-textLight dark:text-zinc-400">Rezept nicht gefunden.</Text>
-                <TouchableOpacity onPress={() => router.back()} className="mt-4 bg-primary px-6 py-3 rounded-xl">
+                <View
+                    onStartShouldSetResponder={() => true}
+                    onResponderRelease={() => router.back()}
+                    className="mt-4 bg-primary px-6 py-3 rounded-xl"
+                >
                     <Text className="text-white font-bold">Zurück</Text>
-                </TouchableOpacity>
+                </View>
             </SafeAreaView>
         );
     }
@@ -42,26 +46,28 @@ const RecipeDetailScreen = () => {
                 borderBottomColor: isDark ? '#27272A' : '#F3F4F6'
             }}>
                 <View className="flex-row items-center flex-1 pr-4">
-                    <TouchableOpacity
-                        onPress={() => {
+                    <View
+                        onStartShouldSetResponder={() => true}
+                        onResponderRelease={() => {
                             haptics.lightImpact();
                             router.back();
                         }}
                         className="p-2 mr-2"
                     >
                         <ChevronLeft size={28} color={isDark ? '#FAFAFA' : '#1F2937'} />
-                    </TouchableOpacity>
+                    </View>
                     <Text style={{ fontSize: 22, fontWeight: '800', color: isDark ? '#FAFAFA' : '#09090B' }} className="flex-1" numberOfLines={1}>{recipe.name}</Text>
                 </View>
-                <TouchableOpacity
-                    onPress={() => {
+                <View
+                    onStartShouldSetResponder={() => true}
+                    onResponderRelease={() => {
                         haptics.lightImpact();
                         router.push(`/recipes/create?editId=${recipe.id}`);
                     }}
                     className="p-2 bg-primary/10 rounded-full"
                 >
                     <Edit2 size={20} color="#2563EB" />
-                </TouchableOpacity>
+                </View>
             </View>
 
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
@@ -70,7 +76,6 @@ const RecipeDetailScreen = () => {
                     <Animated.View
                         entering={FadeInDown.delay(100).springify()}
                         className="bg-card dark:bg-zinc-900 rounded-2xl p-5 mb-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
-                        sharedTransitionTag={`recipe-card-${id}`}
                     >
                         <View className="items-center mb-4">
                             <Text className="text-5xl font-extrabold text-primary">{recipe.totalCalories}</Text>
@@ -105,9 +110,10 @@ const RecipeDetailScreen = () => {
                                     snack: 'Snack'
                                 };
                                 return (
-                                    <TouchableOpacity
+                                    <View
                                         key={meal}
-                                        onPress={() => {
+                                        onStartShouldSetResponder={() => true}
+                                        onResponderRelease={() => {
                                             haptics.success();
                                             addLog({
                                                 meal_type: meal,
@@ -123,7 +129,7 @@ const RecipeDetailScreen = () => {
                                     >
                                         <PlusCircle size={16} color="#2563EB" className="mr-2" />
                                         <Text className="text-text dark:text-zinc-50 font-bold capitalize text-base">{mealTranslations[meal]}</Text>
-                                    </TouchableOpacity>
+                                    </View>
                                 );
                             })}
                         </View>
@@ -159,9 +165,13 @@ const RecipeDetailScreen = () => {
                             onChangeText={(text) => updateRecipe(recipe.id, { notes: text })}
                             textAlignVertical="top"
                         />
-                        <TouchableOpacity onPress={() => Keyboard.dismiss()} className="bg-primary ml-auto px-4 py-2 rounded-lg">
+                        <View
+                            onStartShouldSetResponder={() => true}
+                            onResponderRelease={() => Keyboard.dismiss()}
+                            className="bg-primary ml-auto px-4 py-2 rounded-lg"
+                        >
                             <Text className="text-white font-bold text-sm">Notizen speichern</Text>
-                        </TouchableOpacity>
+                        </View>
                     </Animated.View>
 
                     <View className="h-12" />

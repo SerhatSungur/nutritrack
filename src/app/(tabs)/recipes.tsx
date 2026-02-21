@@ -1,9 +1,9 @@
-import { View, Text, ScrollView, TouchableOpacity, ActionSheetIOS, Platform, Alert, Modal, Dimensions } from 'react-native';
+import { View, Text, ScrollView, ActionSheetIOS, Platform, Alert, Modal, Dimensions } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLogStore, MealType } from '../../store/useLogStore';
 import { useRouter } from 'expo-router';
-import { Plus, BookOpen } from 'lucide-react-native';
+import { Plus, Search, Info, ChevronRight, X, Trash2, BookOpen } from 'lucide-react-native';
 import Animated, { FadeInDown, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { format, isToday, isTomorrow, isYesterday, addDays, subDays, isSameDay } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -20,6 +20,7 @@ export default function RecipesScreen() {
     const recipes = useLogStore((state) => state.recipes);
     const addLog = useLogStore((state) => state.addLog);
     const setDate = useLogStore((state) => state.setDate);
+    const deleteRecipe = useLogStore((state) => state.deleteRecipe);
     const router = useRouter();
 
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -117,15 +118,16 @@ export default function RecipesScreen() {
                 }}>
                     Meine Rezepte
                 </Text>
-                <TouchableOpacity
-                    onPress={() => {
+                <View
+                    onStartShouldSetResponder={() => true}
+                    onResponderRelease={() => {
                         haptics.lightImpact();
                         router.push('/recipes/create');
                     }}
                     style={{ backgroundColor: '#2563EB', padding: 8, borderRadius: 999 }}
                 >
                     <Plus size={24} color="#FFFFFF" />
-                </TouchableOpacity>
+                </View>
             </View>
 
             <ScrollView className="flex-1 bg-background dark:bg-zinc-950 pt-4" showsVerticalScrollIndicator={false}>
@@ -144,11 +146,10 @@ export default function RecipesScreen() {
                                 key={recipe.id}
                                 entering={FadeInDown.delay(index * 100).springify()}
                                 className="mb-4"
-                                sharedTransitionTag={`recipe-card-${recipe.id}`}
                             >
-                                <TouchableOpacity
-                                    activeOpacity={0.7}
-                                    onPress={() => router.push(`/recipes/${recipe.id}`)}
+                                <View
+                                    onStartShouldSetResponder={() => true}
+                                    onResponderRelease={() => router.push(`/recipes/${recipe.id}`)}
                                     className="bg-card dark:bg-zinc-900 rounded-3xl p-5 shadow-[0_2px_12px_rgba(0,0,0,0.04)]"
                                 >
                                     <View className="flex-row justify-between items-start mb-4">
@@ -156,36 +157,61 @@ export default function RecipesScreen() {
                                             <Text className="text-xl font-extrabold text-text dark:text-zinc-50 mb-1 leading-tight">{recipe.name}</Text>
                                             <Text className="text-sm font-medium text-textLight dark:text-zinc-400">{recipe.ingredients.length} {recipe.ingredients.length === 1 ? 'Zutat' : 'Zutaten'}</Text>
                                         </View>
-                                        <TouchableOpacity
-                                            onPress={() => handleQuickLog(recipe)}
-                                            className="bg-primary/10 p-2.5 rounded-full"
-                                        >
-                                            <Plus size={22} color="#2563EB" />
-                                        </TouchableOpacity>
+                                        <View className="flex-row items-center">
+                                            <View
+                                                onStartShouldSetResponder={() => true}
+                                                onResponderRelease={() => {
+                                                    haptics.warning();
+                                                    Alert.alert(
+                                                        'Rezept löschen',
+                                                        'Möchtest du dieses Rezept wirklich dauerhaft löschen?',
+                                                        [
+                                                            { text: 'Abbrechen', style: 'cancel' },
+                                                            {
+                                                                text: 'Löschen',
+                                                                style: 'destructive',
+                                                                onPress: () => {
+                                                                    deleteRecipe(recipe.id);
+                                                                    haptics.success();
+                                                                }
+                                                            }
+                                                        ]
+                                                    );
+                                                }}
+                                                className="p-2 -mr-1"
+                                            >
+                                                <Trash2 size={18} color={isDark ? '#71717A' : '#9CA3AF'} />
+                                            </View>
+                                            <View
+                                                onStartShouldSetResponder={() => true}
+                                                onResponderRelease={async () => {
+                                                    haptics.selection();
+                                                    await handleQuickLog(recipe);
+                                                }}
+                                                className="bg-primary/10 w-10 h-10 rounded-2xl items-center justify-center"
+                                            >
+                                                <Plus size={20} color="#2563EB" />
+                                            </View>
+                                            <ChevronRight size={20} color={isDark ? '#3F3F46' : '#D1D5DB'} />
+                                        </View>
                                     </View>
 
                                     <View className="flex-row justify-between items-center border-t border-gray-100 dark:border-zinc-800 pt-4">
-                                        <View className="flex-row gap-x-6">
-                                            <View className="items-start">
-                                                <Text className="text-[11px] font-bold uppercase tracking-wider text-textLight dark:text-zinc-500 mb-0.5">Protein</Text>
-                                                <Text className="text-base font-semibold text-text dark:text-zinc-50">{recipe.totalProtein}g</Text>
-                                            </View>
-                                            <View className="items-start">
-                                                <Text className="text-[11px] font-bold uppercase tracking-wider text-textLight dark:text-zinc-500 mb-0.5">Kohlenhydrate</Text>
-                                                <Text className="text-base font-semibold text-text dark:text-zinc-50">{recipe.totalCarbs}g</Text>
-                                            </View>
-                                            <View className="items-start">
-                                                <Text className="text-[11px] font-bold uppercase tracking-wider text-textLight dark:text-zinc-500 mb-0.5">Fett</Text>
-                                                <Text className="text-base font-semibold text-text dark:text-zinc-50">{recipe.totalFat}g</Text>
-                                            </View>
-                                        </View>
-
-                                        <View className="items-end pl-4 border-l border-gray-100 dark:border-zinc-800">
-                                            <Text className="text-2xl font-extrabold text-primary">{recipe.totalCalories}</Text>
-                                            <Text className="text-[11px] font-bold uppercase tracking-wider text-primary/70">kcal</Text>
+                                        <View className="flex-row gap-x-4">
+                                            {Object.entries(recipe.totalCalories > 0 ? {
+                                                Cal: recipe.totalCalories,
+                                                Pro: recipe.totalProtein,
+                                                Carb: recipe.totalCarbs,
+                                                Fat: recipe.totalFat
+                                            } : { Cal: 0, Pro: 0, Carb: 0, Fat: 0 }).map(([label, value]) => (
+                                                <View key={label}>
+                                                    <Text className="text-xs text-textLight dark:text-zinc-500 font-bold mb-0.5 uppercase tracking-tighter">{label}</Text>
+                                                    <Text className="text-sm font-extrabold text-text dark:text-zinc-50">{Math.round(value as number)}</Text>
+                                                </View>
+                                            ))}
                                         </View>
                                     </View>
-                                </TouchableOpacity>
+                                </View>
                             </Animated.View>
                         ))
                     )}
@@ -195,28 +221,39 @@ export default function RecipesScreen() {
 
             <Modal visible={showDatePicker} transparent animationType="fade">
                 <View className="flex-1 justify-end bg-black/40">
-                    <TouchableOpacity className="flex-1" activeOpacity={1} onPress={() => setShowDatePicker(false)} />
+                    <View
+                        onStartShouldSetResponder={() => true}
+                        onResponderRelease={() => setShowDatePicker(false)}
+                        className="flex-1"
+                    />
                     <Animated.View entering={SlideInDown.springify()} exiting={SlideOutDown} className="bg-card dark:bg-zinc-900 rounded-t-3xl pt-6 pb-12 shadow-2xl">
                         <View className="px-6 flex-row justify-between items-center mb-6">
-                            <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                            <View
+                                onStartShouldSetResponder={() => true}
+                                onResponderRelease={() => setShowDatePicker(false)}
+                            >
                                 <Text className="text-textLight dark:text-zinc-400 text-lg font-medium">Abbrechen</Text>
-                            </TouchableOpacity>
+                            </View>
                             <Text className="text-text dark:text-zinc-50 font-bold text-lg">Datum wählen</Text>
-                            <TouchableOpacity onPress={confirmLog}>
+                            <View
+                                onStartShouldSetResponder={() => true}
+                                onResponderRelease={confirmLog}
+                            >
                                 <Text className="text-primary font-bold text-lg">Hinzufügen</Text>
-                            </TouchableOpacity>
+                            </View>
                         </View>
 
                         <View className="px-6 flex-row justify-between items-center mb-4 w-full">
                             <Text className="text-xl font-bold text-text dark:text-zinc-50 capitalize">
                                 {format(selectedDate, 'MMMM yyyy', { locale: de })}
                             </Text>
-                            <TouchableOpacity
-                                onPress={() => setSelectedDate(new Date())}
+                            <View
+                                onStartShouldSetResponder={() => true}
+                                onResponderRelease={() => setSelectedDate(new Date())}
                                 className="bg-gray-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full"
                             >
                                 <Text className="text-xs font-semibold text-textLight dark:text-zinc-400">Heute</Text>
-                            </TouchableOpacity>
+                            </View>
                         </View>
 
                         <View className="mb-2 w-full">

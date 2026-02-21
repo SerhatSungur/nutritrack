@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, ScrollView, ActivityIndicator } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { useState, useEffect } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -45,14 +45,15 @@ const IngredientAmountInput = ({
                 returnKeyType="done"
             />
             {servingSize ? (
-                <TouchableOpacity
-                    onPress={() => handleUpdate(amount, !useServing)}
+                <View
+                    onStartShouldSetResponder={() => true}
+                    onResponderRelease={() => handleUpdate(amount, !useServing)}
                     className="border-l border-gray-200 dark:border-zinc-700 w-[55px] items-center justify-center h-full bg-primary/5 active:bg-primary/10"
                 >
                     <Text className="text-[11px] font-extrabold text-primary uppercase tracking-widest" numberOfLines={1} adjustsFontSizeToFit>
                         {useServing ? 'STK.' : unit}
                     </Text>
-                </TouchableOpacity>
+                </View>
             ) : (
                 <View className="border-l border-gray-200 dark:border-zinc-700 w-[45px] items-center justify-center h-full bg-black/5 dark:bg-white/5">
                     <Text className="text-[11px] font-extrabold text-textLight dark:text-zinc-400 uppercase tracking-widest">{unit}</Text>
@@ -181,28 +182,30 @@ export default function CreateRecipeScreen() {
                 borderBottomColor: isDark ? '#27272A' : '#F3F4F6'
             }}>
                 <View className="flex-row items-center flex-1 pr-4">
-                    <TouchableOpacity
-                        onPress={() => {
+                    <View
+                        onStartShouldSetResponder={() => true}
+                        onResponderRelease={() => {
                             haptics.lightImpact();
                             router.back();
                         }}
                         className="p-2 mr-2"
                     >
                         <ChevronLeft size={28} color={isDark ? '#FAFAFA' : '#1F2937'} />
-                    </TouchableOpacity>
+                    </View>
                     <Text style={{ fontSize: 22, fontWeight: '800', color: isDark ? '#FAFAFA' : '#09090B' }} className="flex-1" numberOfLines={1}>
                         {editId ? 'Rezept bearbeiten' : 'Neues Rezept'}
                     </Text>
                 </View>
-                <TouchableOpacity
-                    onPress={() => {
+                <View
+                    onStartShouldSetResponder={() => true}
+                    onResponderRelease={() => {
                         haptics.lightImpact();
                         router.back();
                     }}
                     className="p-2"
                 >
                     <X size={24} color={isDark ? '#FAFAFA' : '#1F2937'} />
-                </TouchableOpacity>
+                </View>
             </View>
 
             <ScrollView
@@ -245,9 +248,13 @@ export default function CreateRecipeScreen() {
                                     unit={ing.unit || 'g'}
                                 />
 
-                                <TouchableOpacity onPress={() => handleRemoveIngredient(ing.id)} className="p-2 bg-red-50 rounded-full">
+                                <View
+                                    onStartShouldSetResponder={() => true}
+                                    onResponderRelease={() => handleRemoveIngredient(ing.id)}
+                                    className="p-2 bg-red-50 rounded-full"
+                                >
                                     <X size={16} color="#EF4444" />
-                                </TouchableOpacity>
+                                </View>
                             </View>
                         ))}
                     </Animated.View>
@@ -268,9 +275,13 @@ export default function CreateRecipeScreen() {
                             autoCapitalize="none"
                             returnKeyType="search"
                         />
-                        <TouchableOpacity onPress={() => router.push('/scanner')} className="ml-1 p-1.5 bg-primary/10 rounded-lg">
+                        <View
+                            onStartShouldSetResponder={() => true}
+                            onResponderRelease={() => router.push('/scanner')}
+                            className="ml-1 p-1.5 bg-primary/10 rounded-lg"
+                        >
                             <ScanLine size={20} color="#2563EB" />
-                        </TouchableOpacity>
+                        </View>
                     </View>
 
                     {loading ? (
@@ -279,8 +290,9 @@ export default function CreateRecipeScreen() {
                         searchResults.length > 0 ? (
                             searchResults.map((item, index) => (
                                 <Animated.View key={item.id} entering={FadeInDown.delay(index * 30).springify()}>
-                                    <TouchableOpacity
-                                        onPress={() => handleAddIngredient(item)}
+                                    <View
+                                        onStartShouldSetResponder={() => true}
+                                        onResponderRelease={() => handleAddIngredient(item)}
                                         className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-zinc-800 last:border-0"
                                     >
                                         <View className="flex-1 mr-4">
@@ -291,16 +303,24 @@ export default function CreateRecipeScreen() {
                                             </Text>
                                         </View>
                                         <View className="flex-row items-center gap-x-2">
-                                            <TouchableOpacity onPress={() => toggleFavorite(item)} hitSlop={8}>
+                                            <View
+                                                onStartShouldSetResponder={() => true}
+                                                onResponderMove={() => { }} // dummy to prevent bubble
+                                                onResponderRelease={(e) => {
+                                                    e.stopPropagation();
+                                                    toggleFavorite(item);
+                                                }}
+                                                hitSlop={8}
+                                            >
                                                 <Star
                                                     size={18}
                                                     color={isFav(item.id) ? '#F59E0B' : '#D1D5DB'}
                                                     fill={isFav(item.id) ? '#F59E0B' : 'none'}
                                                 />
-                                            </TouchableOpacity>
+                                            </View>
                                             <Plus size={20} color="#2563EB" />
                                         </View>
-                                    </TouchableOpacity>
+                                    </View>
                                 </Animated.View>
                             ))
                         ) : searchQuery === '' ? (
@@ -309,14 +329,18 @@ export default function CreateRecipeScreen() {
                                     <>
                                         <Text className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-2">⭐ Favoriten</Text>
                                         {favoriteFoods.map(item => (
-                                            <TouchableOpacity key={item.id} onPress={() => handleAddIngredient(item)}
-                                                className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-zinc-800">
+                                            <View
+                                                key={item.id}
+                                                onStartShouldSetResponder={() => true}
+                                                onResponderRelease={() => handleAddIngredient(item)}
+                                                className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-zinc-800"
+                                            >
                                                 <View className="flex-1 mr-4">
                                                     <Text className="text-base font-medium text-text dark:text-zinc-50" numberOfLines={1}>{item.name}</Text>
                                                     <Text className="text-xs text-textLight dark:text-zinc-400">{item.calories} kcal/100g</Text>
                                                 </View>
                                                 <Plus size={20} color="#2563EB" />
-                                            </TouchableOpacity>
+                                            </View>
                                         ))}
                                     </>
                                 )}
@@ -324,14 +348,18 @@ export default function CreateRecipeScreen() {
                                     <>
                                         <Text className="text-xs font-bold text-textLight dark:text-zinc-400 uppercase tracking-widest mb-2 mt-3">Zuletzt verwendet</Text>
                                         {recentFoods.slice(0, 5).map(item => (
-                                            <TouchableOpacity key={item.id} onPress={() => handleAddIngredient(item)}
-                                                className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-zinc-800">
+                                            <View
+                                                key={item.id}
+                                                onStartShouldSetResponder={() => true}
+                                                onResponderRelease={() => handleAddIngredient(item)}
+                                                className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-zinc-800"
+                                            >
                                                 <View className="flex-1 mr-4">
                                                     <Text className="text-base font-medium text-text dark:text-zinc-50" numberOfLines={1}>{item.name}</Text>
                                                     <Text className="text-xs text-textLight dark:text-zinc-400">{item.calories} kcal/100g</Text>
                                                 </View>
                                                 <Plus size={20} color="#2563EB" />
-                                            </TouchableOpacity>
+                                            </View>
                                         ))}
                                     </>
                                 )}
@@ -344,8 +372,9 @@ export default function CreateRecipeScreen() {
                                                     <Text className="text-base font-medium text-text dark:text-zinc-50">{recipe.name}</Text>
                                                     <Text className="text-xs text-textLight dark:text-zinc-400">{recipe.totalCalories} kcal • {recipe.ingredients.length} Zutaten</Text>
                                                 </View>
-                                                <TouchableOpacity
-                                                    onPress={() => {
+                                                <View
+                                                    onStartShouldSetResponder={() => true}
+                                                    onResponderRelease={() => {
                                                         if (defaultMeal) {
                                                             addLog({ meal_type: defaultMeal as any, name: recipe.name, calories: recipe.totalCalories, protein: recipe.totalProtein, carbs: recipe.totalCarbs, fat: recipe.totalFat });
                                                             router.back();
@@ -356,7 +385,7 @@ export default function CreateRecipeScreen() {
                                                     className="bg-primary/10 px-3 py-1.5 rounded-full"
                                                 >
                                                     <Text className="text-primary text-xs font-bold">{defaultMeal ? 'Hinzufügen' : 'Zutaten'}</Text>
-                                                </TouchableOpacity>
+                                                </View>
                                             </View>
                                         ))}
                                     </View>
@@ -367,16 +396,17 @@ export default function CreateRecipeScreen() {
                 </Animated.View>
 
                 <Animated.View entering={FadeInDown.delay(300).springify()}>
-                    <TouchableOpacity
-                        onPress={() => {
+                    <View
+                        onStartShouldSetResponder={() => !(!name || ingredients.length === 0)}
+                        onResponderRelease={() => {
+                            if (!name || ingredients.length === 0) return;
                             haptics.success();
                             handleSaveRecipe();
                         }}
-                        disabled={!name || ingredients.length === 0}
                         className={`py-4 rounded-xl items-center mb-8 ${(!name || ingredients.length === 0) ? 'bg-blue-300' : 'bg-primary'}`}
                     >
                         <Text className="text-white font-bold text-lg">{editId ? 'Änderungen speichern' : 'Rezept speichern'}</Text>
-                    </TouchableOpacity>
+                    </View>
                 </Animated.View>
             </ScrollView>
         </SafeAreaView>
