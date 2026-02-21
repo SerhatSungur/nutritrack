@@ -8,6 +8,7 @@ import Animated, { FadeInDown, SlideInDown, SlideOutDown } from 'react-native-re
 import { format, isToday, isTomorrow, isYesterday, addDays, subDays, isSameDay } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useState, useRef, useEffect } from 'react';
+import { haptics } from '../../lib/haptics';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const STATIC_TODAY = new Date();
@@ -117,7 +118,10 @@ export default function RecipesScreen() {
                     Meine Rezepte
                 </Text>
                 <TouchableOpacity
-                    onPress={() => router.push('/recipes/create')}
+                    onPress={() => {
+                        haptics.lightImpact();
+                        router.push('/recipes/create');
+                    }}
                     style={{ backgroundColor: '#2563EB', padding: 8, borderRadius: 999 }}
                 >
                     <Plus size={24} color="#FFFFFF" />

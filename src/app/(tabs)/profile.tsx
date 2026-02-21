@@ -7,6 +7,8 @@ import { useLogStore } from '../../store/useLogStore';
 import { useColorScheme } from 'nativewind';
 import { Moon, Sun, Target, User, Droplets, Layout } from 'lucide-react-native';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { haptics } from '../../lib/haptics';
 
 // ─── Sub-Components ──────────────────────────────────────────────────────────
 
@@ -46,6 +48,7 @@ const MacroDisplayToggle = ({ isDark }: { isDark: boolean }) => {
 
     const handleSetMode = useCallback((newMode: 'remaining' | 'consumed') => {
         if (mode === newMode) return;
+        haptics.selection();
         setMode(newMode);
     }, [mode, setMode]);
 
@@ -160,93 +163,101 @@ export default function ProfileScreen() {
                 automaticallyAdjustKeyboardInsets={true}
             >
                 {/* Account Section */}
-                <View className="bg-card dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)] items-center">
-                    <View className="w-20 h-20 bg-blue-100 rounded-full items-center justify-center mb-4">
-                        <User size={40} color="#2563EB" />
+                <Animated.View entering={FadeInDown.delay(100).duration(600)}>
+                    <View className="bg-card dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)] items-center">
+                        <View className="w-20 h-20 bg-blue-100 rounded-full items-center justify-center mb-4">
+                            <User size={40} color="#2563EB" />
+                        </View>
+                        <Text className="text-xl font-bold text-text dark:text-zinc-50 mb-1">Anonymer Benutzer</Text>
+                        <Text className="text-sm text-textLight dark:text-zinc-400 text-center mb-6 px-4">
+                            Deine Daten werden derzeit lokal gespeichert. Melde dich an, um sie zu synchronisieren.
+                        </Text>
+                        <View
+                            onStartShouldSetResponder={() => true}
+                            onResponderRelease={() => {/* Handle login */ }}
+                            style={{
+                                backgroundColor: '#2563EB',
+                                width: '100%',
+                                paddingVertical: 14,
+                                borderRadius: 12,
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 16 }}>Anmelden / Registrieren</Text>
+                        </View>
                     </View>
-                    <Text className="text-xl font-bold text-text dark:text-zinc-50 mb-1">Anonymer Benutzer</Text>
-                    <Text className="text-sm text-textLight dark:text-zinc-400 text-center mb-6 px-4">
-                        Deine Daten werden derzeit lokal gespeichert. Melde dich an, um sie zu synchronisieren.
-                    </Text>
-                    <View
-                        onStartShouldSetResponder={() => true}
-                        onResponderRelease={() => {/* Handle login */ }}
-                        style={{
-                            backgroundColor: '#2563EB',
-                            width: '100%',
-                            paddingVertical: 14,
-                            borderRadius: 12,
-                            alignItems: 'center',
-                        }}
-                    >
-                        <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 16 }}>Anmelden / Registrieren</Text>
-                    </View>
-                </View>
+                </Animated.View>
 
                 {/* Preferences Section */}
-                <View className="bg-card dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
-                    <Text className="text-sm font-bold text-textLight dark:text-zinc-400 uppercase tracking-wider mb-4 ml-1">Einstellungen</Text>
+                <Animated.View entering={FadeInDown.delay(200).duration(600)}>
+                    <View className="bg-card dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                        <Text className="text-sm font-bold text-textLight dark:text-zinc-400 uppercase tracking-wider mb-4 ml-1">Einstellungen</Text>
 
-                    <View className="flex-row items-center justify-between py-3 border-b border-gray-100 dark:border-zinc-800">
-                        <View className="flex-row items-center gap-x-3">
-                            {isDark
-                                ? <Moon size={22} color="#8B5CF6" />
-                                : <Sun size={22} color="#F59E0B" />
-                            }
-                            <Text className="text-base font-semibold text-text dark:text-zinc-50">Dunkelmodus</Text>
-                        </View>
-                        <Switch
-                            value={isDark}
-                            onValueChange={handleToggleDark}
-                            trackColor={{ false: '#E5E7EB', true: '#2563EB' }}
-                            thumbColor={'#FFFFFF'}
-                        />
-                    </View>
-
-                    <MacroDisplayToggle isDark={isDark} />
-                </View>
-
-                {/* Water Goal Section */}
-                <View className="bg-card dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
-                    <View className="flex-row items-center mb-4 ml-1 gap-x-2">
-                        <Droplets size={20} color="#3B82F6" />
-                        <Text className="text-sm font-bold text-textLight dark:text-zinc-400 uppercase tracking-wider">Wasser-Ziel</Text>
-                    </View>
-                    <View className="flex-row justify-between items-center py-1">
-                        <Text className="text-base font-semibold text-text dark:text-zinc-50">Tagesziel</Text>
-                        <ProfileNumberInput
-                            initialValue={waterGoal}
-                            onUpdate={(val) => setWaterGoal(Math.max(100, val))}
-                            unit="ml"
-                            maxLength={5}
-                        />
-                    </View>
-                </View>
-
-                {/* Macro Goals Section */}
-                <View className="bg-card dark:bg-zinc-900 rounded-3xl p-5 mb-8 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
-                    <View className="flex-row items-center mb-5 ml-1 gap-x-2">
-                        <Target size={20} color="#10B981" />
-                        <Text className="text-sm font-bold text-textLight dark:text-zinc-400 uppercase tracking-wider">Tägliche Makro-Ziele</Text>
-                    </View>
-
-                    {[
-                        { label: 'Kalorien', key: 'calories' as const, unit: 'kcal', max: 5 },
-                        { label: 'Protein', key: 'protein' as const, unit: 'g', max: 3 },
-                        { label: 'Kohlenhydrate', key: 'carbs' as const, unit: 'g', max: 3 },
-                        { label: 'Fett', key: 'fat' as const, unit: 'g', max: 3 },
-                    ].map(({ label, key, unit, max }, i, arr) => (
-                        <View key={key} className={`flex-row justify-between items-center py-3 ${i < arr.length - 1 ? 'border-b border-gray-100 dark:border-zinc-800' : ''}`}>
-                            <Text className="text-base font-semibold text-text dark:text-zinc-50">{label}</Text>
-                            <ProfileNumberInput
-                                initialValue={macroGoals[key]}
-                                onUpdate={(val) => handleUpdateGoal(key, val)}
-                                unit={unit}
-                                maxLength={max}
+                        <View className="flex-row items-center justify-between py-3 border-b border-gray-100 dark:border-zinc-800">
+                            <View className="flex-row items-center gap-x-3">
+                                {isDark
+                                    ? <Moon size={22} color="#8B5CF6" />
+                                    : <Sun size={22} color="#F59E0B" />
+                                }
+                                <Text className="text-base font-semibold text-text dark:text-zinc-50">Dunkelmodus</Text>
+                            </View>
+                            <Switch
+                                value={isDark}
+                                onValueChange={handleToggleDark}
+                                trackColor={{ false: '#E5E7EB', true: '#2563EB' }}
+                                thumbColor={'#FFFFFF'}
                             />
                         </View>
-                    ))}
-                </View>
+
+                        <MacroDisplayToggle isDark={isDark} />
+                    </View>
+                </Animated.View>
+
+                {/* Water Goal Section */}
+                <Animated.View entering={FadeInDown.delay(300).duration(600)}>
+                    <View className="bg-card dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                        <View className="flex-row items-center mb-4 ml-1 gap-x-2">
+                            <Droplets size={20} color="#3B82F6" />
+                            <Text className="text-sm font-bold text-textLight dark:text-zinc-400 uppercase tracking-wider">Wasser-Ziel</Text>
+                        </View>
+                        <View className="flex-row justify-between items-center py-1">
+                            <Text className="text-base font-semibold text-text dark:text-zinc-50">Tagesziel</Text>
+                            <ProfileNumberInput
+                                initialValue={waterGoal}
+                                onUpdate={(val) => setWaterGoal(Math.max(100, val))}
+                                unit="ml"
+                                maxLength={5}
+                            />
+                        </View>
+                    </View>
+                </Animated.View>
+
+                {/* Macro Goals Section */}
+                <Animated.View entering={FadeInDown.delay(400).duration(600)}>
+                    <View className="bg-card dark:bg-zinc-900 rounded-3xl p-5 mb-8 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                        <View className="flex-row items-center mb-5 ml-1 gap-x-2">
+                            <Target size={20} color="#10B981" />
+                            <Text className="text-sm font-bold text-textLight dark:text-zinc-400 uppercase tracking-wider">Tägliche Makro-Ziele</Text>
+                        </View>
+
+                        {[
+                            { label: 'Kalorien', key: 'calories' as const, unit: 'kcal', max: 5 },
+                            { label: 'Protein', key: 'protein' as const, unit: 'g', max: 3 },
+                            { label: 'Kohlenhydrate', key: 'carbs' as const, unit: 'g', max: 3 },
+                            { label: 'Fett', key: 'fat' as const, unit: 'g', max: 3 },
+                        ].map(({ label, key, unit, max }, i, arr) => (
+                            <View key={key} className={`flex-row justify-between items-center py-3 ${i < arr.length - 1 ? 'border-b border-gray-100 dark:border-zinc-800' : ''}`}>
+                                <Text className="text-base font-semibold text-text dark:text-zinc-50">{label}</Text>
+                                <ProfileNumberInput
+                                    initialValue={macroGoals[key]}
+                                    onUpdate={(val) => handleUpdateGoal(key, val)}
+                                    unit={unit}
+                                    maxLength={max}
+                                />
+                            </View>
+                        ))}
+                    </View>
+                </Animated.View>
             </ScrollView>
         </SafeAreaView>
     );

@@ -10,12 +10,13 @@ import { format, subDays, addDays, isSameDay } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { Plus, Droplets, BookOpen, ChevronRight, X } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { haptics } from '../../lib/haptics';
 import { useRef, useEffect, useState, useCallback, memo } from 'react';
 import Animated, {
     FadeInDown, FadeIn,
     useSharedValue, withTiming, useAnimatedProps, Easing,
     useAnimatedStyle, interpolate, Extrapolation,
-    useAnimatedScrollHandler,
+    useAnimatedScrollHandler, withSequence,
 } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 
@@ -34,6 +35,8 @@ const MacroRing = memo(({ value, goal, color, size = 72, strokeWidth = 7, label,
 }) => {
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
+    const ringScale = useSharedValue(0.4);
+    const pulseScale = useSharedValue(1);
     const progress = useSharedValue(0);
     const displayMacroMode = useLogStore((s) => s.displayMacroMode);
 
@@ -41,18 +44,33 @@ const MacroRing = memo(({ value, goal, color, size = 72, strokeWidth = 7, label,
     const displayValue = displayMacroMode === 'remaining' ? remaining : value;
 
     useEffect(() => {
+        // Entrance scale-in
+        ringScale.value = withTiming(1, { duration: 800, easing: Easing.bezier(0.33, 1, 0.68, 1) });
+
+        // Fill progress with liquid easing
         progress.value = withTiming(Math.min(value / Math.max(goal, 1), 1), {
-            duration: 900, easing: Easing.out(Easing.cubic),
+            duration: 900, easing: Easing.bezier(0.33, 1, 0.68, 1),
         });
+
+        // Interactive pulse on value change
+        pulseScale.value = withSequence(
+            withTiming(1.15, { duration: 150, easing: Easing.out(Easing.quad) }),
+            withTiming(1, { duration: 300, easing: Easing.bezier(0.33, 1, 0.68, 1) })
+        );
     }, [value, goal]);
 
     const animatedProps = useAnimatedProps(() => ({
         strokeDashoffset: circumference * (1 - progress.value),
     }));
 
+    const ringStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: ringScale.value * pulseScale.value }],
+        opacity: interpolate(ringScale.value, [0.4, 0.8, 1], [0, 0.6, 1]),
+    }));
+
     return (
         <View style={{ alignItems: 'center' }}>
-            <View style={{ width: size, height: size }}>
+            <Animated.View style={[{ width: size, height: size }, ringStyle]}>
                 <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
                     <Circle cx={size / 2} cy={size / 2} r={radius} stroke={color} strokeWidth={strokeWidth} strokeOpacity={0.15} fill="none" />
                     <AnimatedCircle
@@ -68,7 +86,7 @@ const MacroRing = memo(({ value, goal, color, size = 72, strokeWidth = 7, label,
                         {displayValue}{unit}
                     </Text>
                 </View>
-            </View>
+            </Animated.View>
             <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 0.5, textTransform: 'uppercase', color: isDark ? '#A1A1AA' : '#71717A', marginTop: 3 }}>{label}</Text>
         </View>
     );
@@ -80,27 +98,44 @@ const CalorieRing = memo(({ consumed, goal, isDark }: { consumed: number; goal: 
     const strokeWidth = 10;
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
+    const ringScale = useSharedValue(0.4);
+    const pulseScale = useSharedValue(1);
     const progress = useSharedValue(0);
-    const remaining = Math.max(0, goal - consumed);
     const displayMacroMode = useLogStore((s) => s.displayMacroMode);
+    const remaining = Math.max(0, goal - consumed);
 
     const displayValue = displayMacroMode === 'remaining' ? remaining : consumed;
     const labelSuffix = displayMacroMode === 'remaining' ? 'übrig' : 'gegessen';
 
     useEffect(() => {
+        // Entrance scale-in
+        ringScale.value = withTiming(1, { duration: 1000, easing: Easing.bezier(0.33, 1, 0.68, 1) });
+
+        // Fill progress with liquid easing
         progress.value = withTiming(Math.min(consumed / Math.max(goal, 1), 1), {
-            duration: 1000, easing: Easing.out(Easing.cubic),
+            duration: 1100, easing: Easing.bezier(0.33, 1, 0.68, 1),
         });
+
+        // Interactive pulse on value change
+        pulseScale.value = withSequence(
+            withTiming(1.08, { duration: 150, easing: Easing.out(Easing.quad) }),
+            withTiming(1, { duration: 300, easing: Easing.bezier(0.33, 1, 0.68, 1) })
+        );
     }, [consumed, goal]);
 
     const animatedProps = useAnimatedProps(() => ({
         strokeDashoffset: circumference * (1 - progress.value),
     }));
 
+    const ringStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: ringScale.value * pulseScale.value }],
+        opacity: interpolate(ringScale.value, [0.4, 0.8, 1], [0, 0.6, 1]),
+    }));
+
     const overGoal = consumed > goal;
 
     return (
-        <View style={{ alignItems: 'center', justifyContent: 'center', width: size, height: size }}>
+        <Animated.View style={[{ alignItems: 'center', justifyContent: 'center', width: size, height: size }, ringStyle]}>
             <Svg width={size} height={size} style={{ position: 'absolute', transform: [{ rotate: '-90deg' }] }}>
                 <Circle cx={size / 2} cy={size / 2} r={radius} stroke="#2563EB" strokeWidth={strokeWidth} strokeOpacity={0.12} fill="none" />
                 <AnimatedCircle
@@ -117,7 +152,7 @@ const CalorieRing = memo(({ consumed, goal, isDark }: { consumed: number; goal: 
                 <Text style={{ fontSize: 11, fontWeight: '600', color: isDark ? '#A1A1AA' : '#71717A' }}>kcal {labelSuffix}</Text>
                 <Text style={{ fontSize: 10, color: isDark ? '#71717A' : '#9CA3AF', marginTop: 2 }}>{consumed} / {goal}</Text>
             </View>
-        </View>
+        </Animated.View>
     );
 });
 
@@ -167,7 +202,17 @@ function WaterCard({ isDark }: { isDark: boolean }) {
                 {AMOUNTS.map(ml => (
                     <TouchableOpacity
                         key={ml}
-                        onPress={() => addWater(ml)}
+                        onPress={() => {
+                            const isGoalReached = waterIntake >= waterGoal;
+                            addWater(ml);
+
+                            // If this sip reaches or exceeds the goal for the first time
+                            if (!isGoalReached && (waterIntake + ml) >= waterGoal) {
+                                haptics.success();
+                            } else {
+                                haptics.lightImpact();
+                            }
+                        }}
                         className="flex-1 items-center py-2.5 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100/50 dark:border-blue-900/30"
                         activeOpacity={0.7}
                     >
@@ -212,7 +257,10 @@ const MealSection = ({ title, type, onAddPress }: { title: string; type: MealTyp
             )}
 
             <TouchableOpacity
-                onPress={() => onAddPress(type)}
+                onPress={() => {
+                    haptics.lightImpact();
+                    onAddPress(type);
+                }}
                 className="flex-row items-center mt-3 pt-3 border-t border-gray-100 dark:border-zinc-800"
             >
                 <Plus size={20} color="#2563EB" />
@@ -251,6 +299,7 @@ function RecipePickerModal({
 
     const handleAdd = (recipe: Recipe) => {
         if (!mealType) return;
+        haptics.success();
         addLog({
             meal_type: mealType,
             name: recipe.name,
@@ -299,7 +348,10 @@ function RecipePickerModal({
                         )}
                     </View>
                     <TouchableOpacity
-                        onPress={onClose}
+                        onPress={() => {
+                            haptics.lightImpact();
+                            onClose();
+                        }}
                         style={{
                             width: 36, height: 36,
                             backgroundColor: isDark ? '#27272A' : '#F3F4F6',
@@ -318,7 +370,10 @@ function RecipePickerModal({
                             Erstelle dein erstes Rezept, um es hier schnell zu einem Gericht hinzuzufügen.
                         </Text>
                         <TouchableOpacity
-                            onPress={onCreateNew}
+                            onPress={() => {
+                                haptics.lightImpact();
+                                onCreateNew();
+                            }}
                             style={{ backgroundColor: '#2563EB', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 14 }}
                         >
                             <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 15 }}>+ Neues Rezept erstellen</Text>
@@ -476,7 +531,10 @@ export default function DashboardScreen() {
                     {format(currentDate, 'MMMM yyyy', { locale: de })}
                 </Text>
                 <TouchableOpacity
-                    onPress={() => setDate(new Date())}
+                    onPress={() => {
+                        haptics.lightImpact();
+                        setDate(new Date());
+                    }}
                     style={{ backgroundColor: isDark ? '#27272A' : '#F3F4F6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 }}
                 >
                     <Text style={{ fontSize: 12, fontWeight: '600', color: textSecondary }}>Heute</Text>
@@ -504,7 +562,10 @@ export default function DashboardScreen() {
                             return (
                                 <TouchableOpacity
                                     key={date.toISOString()}
-                                    onPress={() => setDate(date)}
+                                    onPress={() => {
+                                        haptics.selection();
+                                        setDate(date);
+                                    }}
                                     style={[
                                         { alignItems: 'center', justifyContent: 'center', marginRight: 8, borderRadius: 14, width: 48, height: 56 },
                                         selected
@@ -537,11 +598,21 @@ export default function DashboardScreen() {
 
                 {/* ── Scrollable cards on page background ── */}
                 <View style={{ backgroundColor: pageBg, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 16, paddingHorizontal: 16, minHeight: 600 }}>
-                    <WaterCard isDark={isDark} />
-                    <MealSection title="Frühstück" type="breakfast" onAddPress={openPicker} />
-                    <MealSection title="Mittagessen" type="lunch" onAddPress={openPicker} />
-                    <MealSection title="Abendessen" type="dinner" onAddPress={openPicker} />
-                    <MealSection title="Snacks" type="snack" onAddPress={openPicker} />
+                    <Animated.View entering={FadeInDown.delay(400).duration(600)}>
+                        <WaterCard isDark={isDark} />
+                    </Animated.View>
+                    <Animated.View entering={FadeInDown.delay(500).duration(600)}>
+                        <MealSection title="Frühstück" type="breakfast" onAddPress={openPicker} />
+                    </Animated.View>
+                    <Animated.View entering={FadeInDown.delay(600).duration(600)}>
+                        <MealSection title="Mittagessen" type="lunch" onAddPress={openPicker} />
+                    </Animated.View>
+                    <Animated.View entering={FadeInDown.delay(700).duration(600)}>
+                        <MealSection title="Abendessen" type="dinner" onAddPress={openPicker} />
+                    </Animated.View>
+                    <Animated.View entering={FadeInDown.delay(800).duration(600)}>
+                        <MealSection title="Snacks" type="snack" onAddPress={openPicker} />
+                    </Animated.View>
                 </View>
             </AnimatedScrollView>
 

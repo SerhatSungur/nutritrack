@@ -6,11 +6,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'nativewind';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-export default function RecipeDetailScreen() {
+const RecipeDetailScreen = () => {
     const { id } = useLocalSearchParams();
     const router = useRouter();
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === 'dark';
+    const { haptics } = require('../../lib/haptics');
 
     const recipe = useLogStore(state => state.recipes.find(r => r.id === id));
     const updateRecipe = useLogStore(state => state.updateRecipe);
@@ -30,15 +31,33 @@ export default function RecipeDetailScreen() {
     return (
         <SafeAreaView className="flex-1 bg-background dark:bg-zinc-950" edges={['top']}>
             {/* Header */}
-            <View className="px-4 py-3 flex-row items-center border-b border-gray-100 dark:border-zinc-800 bg-card dark:bg-zinc-900 justify-between">
+            <View style={{
+                height: 70,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingHorizontal: 20,
+                backgroundColor: isDark ? '#18181B' : '#FFFFFF',
+                borderBottomWidth: 1,
+                borderBottomColor: isDark ? '#27272A' : '#F3F4F6'
+            }}>
                 <View className="flex-row items-center flex-1 pr-4">
-                    <TouchableOpacity onPress={() => router.back()} className="p-2 mr-2">
-                        <ChevronLeft size={28} color="#1F2937" />
+                    <TouchableOpacity
+                        onPress={() => {
+                            haptics.lightImpact();
+                            router.back();
+                        }}
+                        className="p-2 mr-2"
+                    >
+                        <ChevronLeft size={28} color={isDark ? '#FAFAFA' : '#1F2937'} />
                     </TouchableOpacity>
-                    <Text className="text-2xl font-bold text-text dark:text-zinc-50 flex-1" numberOfLines={1}>{recipe.name}</Text>
+                    <Text style={{ fontSize: 22, fontWeight: '800', color: isDark ? '#FAFAFA' : '#09090B' }} className="flex-1" numberOfLines={1}>{recipe.name}</Text>
                 </View>
                 <TouchableOpacity
-                    onPress={() => router.push(`/recipes/create?editId=${recipe.id}`)}
+                    onPress={() => {
+                        haptics.lightImpact();
+                        router.push(`/recipes/create?editId=${recipe.id}`);
+                    }}
                     className="p-2 bg-primary/10 rounded-full"
                 >
                     <Edit2 size={20} color="#2563EB" />
@@ -85,6 +104,7 @@ export default function RecipeDetailScreen() {
                                     <TouchableOpacity
                                         key={meal}
                                         onPress={() => {
+                                            haptics.success();
                                             addLog({
                                                 meal_type: meal,
                                                 name: recipe.name,
@@ -145,4 +165,6 @@ export default function RecipeDetailScreen() {
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
-}
+};
+
+export default RecipeDetailScreen;

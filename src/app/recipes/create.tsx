@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useLogStore, RecipeIngredient } from '../../store/useLogStore';
 import { searchFood, FoodItem } from '../../lib/api/foodApi';
-import { X, Search, Plus, ScanLine, Star } from 'lucide-react-native';
+import { X, Search, Plus, ScanLine, Star, ChevronLeft } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { haptics } from '../../lib/haptics';
 
 const IngredientAmountInput = ({
     initialAmount,
@@ -167,11 +169,39 @@ export default function CreateRecipeScreen() {
     };
 
     return (
-        <View className="flex-1 bg-background dark:bg-zinc-950 pt-12 px-4">
-            <View className="flex-row justify-between items-center mb-6">
-                <Text className="text-2xl font-bold text-text dark:text-zinc-50">{editId ? 'Rezept bearbeiten' : 'Neues Rezept'}</Text>
-                <TouchableOpacity onPress={() => router.back()} className="p-2">
-                    <X size={24} color={colorScheme === 'dark' ? '#FAFAFA' : '#1F2937'} />
+        <SafeAreaView className="flex-1 bg-background dark:bg-zinc-950" edges={['top']}>
+            <View style={{
+                height: 70,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingHorizontal: 20,
+                backgroundColor: isDark ? '#18181B' : '#FFFFFF',
+                borderBottomWidth: 1,
+                borderBottomColor: isDark ? '#27272A' : '#F3F4F6'
+            }}>
+                <View className="flex-row items-center flex-1 pr-4">
+                    <TouchableOpacity
+                        onPress={() => {
+                            haptics.lightImpact();
+                            router.back();
+                        }}
+                        className="p-2 mr-2"
+                    >
+                        <ChevronLeft size={28} color={isDark ? '#FAFAFA' : '#1F2937'} />
+                    </TouchableOpacity>
+                    <Text style={{ fontSize: 22, fontWeight: '800', color: isDark ? '#FAFAFA' : '#09090B' }} className="flex-1" numberOfLines={1}>
+                        {editId ? 'Rezept bearbeiten' : 'Neues Rezept'}
+                    </Text>
+                </View>
+                <TouchableOpacity
+                    onPress={() => {
+                        haptics.lightImpact();
+                        router.back();
+                    }}
+                    className="p-2"
+                >
+                    <X size={24} color={isDark ? '#FAFAFA' : '#1F2937'} />
                 </TouchableOpacity>
             </View>
 
@@ -338,7 +368,10 @@ export default function CreateRecipeScreen() {
 
                 <Animated.View entering={FadeInDown.delay(300).springify()}>
                     <TouchableOpacity
-                        onPress={handleSaveRecipe}
+                        onPress={() => {
+                            haptics.success();
+                            handleSaveRecipe();
+                        }}
                         disabled={!name || ingredients.length === 0}
                         className={`py-4 rounded-xl items-center mb-8 ${(!name || ingredients.length === 0) ? 'bg-blue-300' : 'bg-primary'}`}
                     >
@@ -346,6 +379,6 @@ export default function CreateRecipeScreen() {
                     </TouchableOpacity>
                 </Animated.View>
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 }
