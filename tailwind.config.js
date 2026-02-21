@@ -12,6 +12,9 @@ module.exports = {
                 text: "var(--text)",
                 textLight: "var(--textLight)"
             },
+            fontFamily: {
+                sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            },
         },
     },
     plugins: [],

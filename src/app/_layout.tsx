@@ -3,6 +3,13 @@ import "../global.css";
 import { View, Platform } from "react-native";
 import { useColorScheme, vars } from "nativewind";
 import { StatusBar } from "expo-status-bar";
+import { useFonts, PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold } from "@expo-google-fonts/plus-jakarta-sans";
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
 
 const themeVars = {
     light: vars({
@@ -25,16 +32,35 @@ export default function RootLayout() {
     const { colorScheme } = useColorScheme();
     const activeTheme = colorScheme === 'dark' ? themeVars.dark : themeVars.light;
 
+    const [fontsLoaded, fontError] = useFonts({
+        'Plus Jakarta Sans': PlusJakartaSans_400Regular,
+        PlusJakartaSans_400Regular,
+        PlusJakartaSans_500Medium,
+        PlusJakartaSans_600SemiBold,
+        PlusJakartaSans_700Bold,
+        PlusJakartaSans_800ExtraBold,
+    });
+
+    useEffect(() => {
+        if (fontsLoaded || fontError) {
+            SplashScreen.hideAsync().catch(() => { });
+        }
+    }, [fontsLoaded, fontError]);
+
+    if (!fontsLoaded && !fontError) {
+        return null;
+    }
+
+    // Wrap Stack in a View with the theme vars
+    // We use style to pass the CSS variables stably and background colors directly
     return (
-        <View
-            style={activeTheme}
-            className={`flex-1 ${colorScheme === 'dark' ? 'bg-black' : 'bg-background'} justify-center`}
-        >
+        <SafeAreaProvider>
             <View
-                className={`flex-1 w-full bg-background dark:bg-zinc-950 ${colorScheme === 'dark' ? 'dark' : ''}`}
+                style={[{ flex: 1 }, activeTheme as any]}
+                className="bg-background"
             >
                 <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-                <Stack>
+                <Stack screenOptions={{ headerShown: false }}>
                     <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                     <Stack.Screen
                         name="recipes/create"
@@ -48,9 +74,17 @@ export default function RootLayout() {
                         name="recipes/[id]"
                         options={{ headerShown: false }}
                     />
+                    <Stack.Screen
+                        name="scanner"
+                        options={{
+                            presentation: 'fullScreenModal',
+                            headerShown: false,
+                            animation: 'slide_from_bottom',
+                        }}
+                    />
                     <Stack.Screen name="+not-found" />
                 </Stack>
             </View>
-        </View>
+        </SafeAreaProvider>
     );
 }
