@@ -44,17 +44,20 @@ const MacroRing = memo(({ value, goal, color, size = 72, strokeWidth = 7, label,
     const displayValue = displayMacroMode === 'remaining' ? remaining : value;
 
     useEffect(() => {
+        // Reset progress on mount to ensure a visible refill every time
+        progress.value = 0;
+
         // Entrance scale-in
         ringScale.value = withTiming(1, { duration: 800, easing: Easing.bezier(0.33, 1, 0.68, 1) });
 
         // Fill progress with liquid easing
         progress.value = withTiming(Math.min(value / Math.max(goal, 1), 1), {
-            duration: 900, easing: Easing.bezier(0.33, 1, 0.68, 1),
+            duration: 1200, easing: Easing.bezier(0.33, 1, 0.68, 1),
         });
 
         // Interactive pulse on value change
         pulseScale.value = withSequence(
-            withTiming(1.15, { duration: 150, easing: Easing.out(Easing.quad) }),
+            withTiming(1.12, { duration: 150, easing: Easing.out(Easing.quad) }),
             withTiming(1, { duration: 300, easing: Easing.bezier(0.33, 1, 0.68, 1) })
         );
     }, [value, goal]);
@@ -108,12 +111,15 @@ const CalorieRing = memo(({ consumed, goal, isDark }: { consumed: number; goal: 
     const labelSuffix = displayMacroMode === 'remaining' ? 'übrig' : 'gegessen';
 
     useEffect(() => {
+        // Reset progress on mount to ensure a visible refill every time
+        progress.value = 0;
+
         // Entrance scale-in
         ringScale.value = withTiming(1, { duration: 1000, easing: Easing.bezier(0.33, 1, 0.68, 1) });
 
         // Fill progress with liquid easing
         progress.value = withTiming(Math.min(consumed / Math.max(goal, 1), 1), {
-            duration: 1100, easing: Easing.bezier(0.33, 1, 0.68, 1),
+            duration: 1500, easing: Easing.bezier(0.33, 1, 0.68, 1),
         });
 
         // Interactive pulse on value change
@@ -168,8 +174,9 @@ function WaterCard({ isDark }: { isDark: boolean }) {
     const AMOUNTS = [250, 350, 500];
 
     useEffect(() => {
+        progress.value = 0;
         progress.value = withTiming(Math.min(waterIntake / waterGoal, 1), {
-            duration: 600,
+            duration: 1000,
             easing: Easing.bezier(0.33, 1, 0.68, 1),
         });
     }, [waterIntake, waterGoal]);

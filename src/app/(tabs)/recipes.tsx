@@ -140,7 +140,12 @@ export default function RecipesScreen() {
                         </View>
                     ) : (
                         recipes.map((recipe, index) => (
-                            <Animated.View key={recipe.id} entering={FadeInDown.delay(index * 100).springify()} className="mb-4">
+                            <Animated.View
+                                key={recipe.id}
+                                entering={FadeInDown.delay(index * 100).springify()}
+                                className="mb-4"
+                                sharedTransitionTag={`recipe-card-${recipe.id}`}
+                            >
                                 <TouchableOpacity
                                     activeOpacity={0.7}
                                     onPress={() => router.push(`/recipes/${recipe.id}`)}

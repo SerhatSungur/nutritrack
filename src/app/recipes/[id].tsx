@@ -67,7 +67,11 @@ const RecipeDetailScreen = () => {
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
                 <ScrollView className="flex-1 px-4 pt-6" showsVerticalScrollIndicator={false}>
                     {/* Macros Overview */}
-                    <Animated.View entering={FadeInDown.delay(100).springify()} className="bg-card dark:bg-zinc-900 rounded-2xl p-5 mb-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                    <Animated.View
+                        entering={FadeInDown.delay(100).springify()}
+                        className="bg-card dark:bg-zinc-900 rounded-2xl p-5 mb-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+                        sharedTransitionTag={`recipe-card-${id}`}
+                    >
                         <View className="items-center mb-4">
                             <Text className="text-5xl font-extrabold text-primary">{recipe.totalCalories}</Text>
                             <Text className="text-sm font-semibold text-textLight dark:text-zinc-400 uppercase tracking-widest mt-1">Kalorien</Text>
