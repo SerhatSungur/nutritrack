@@ -58,15 +58,19 @@ export default function RootLayout() {
         }
     }, [authInitialized, user]);
 
+    // Hide splash screen when fonts are loaded
     useEffect(() => {
         if (fontsLoaded || fontError) {
             SplashScreen.hideAsync().catch(() => { });
         }
     }, [fontsLoaded, fontError]);
 
-    if (!fontsLoaded && !fontError) {
-        return null;
-    }
+    // Pull cloud data once auth is ready and user exists
+    useEffect(() => {
+        if (authInitialized && user) {
+            syncService.pullAll();
+        }
+    }, [authInitialized, user]);
 
     // Wrap Stack in a View with the theme vars
     // We use style to pass the CSS variables stably and background colors directly
