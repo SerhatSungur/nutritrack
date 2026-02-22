@@ -295,7 +295,10 @@ export default function ProfileScreen() {
     };
 
     const handleToggleDark = () => {
-        Appearance.setColorScheme(isDark ? 'light' : 'dark');
+        // setColorScheme is not always available on react-native-web or older RN versions
+        if (typeof Appearance.setColorScheme === 'function') {
+            Appearance.setColorScheme(isDark ? 'light' : 'dark');
+        }
         toggleColorScheme();
     };
 

@@ -15,7 +15,7 @@ import { useRef, useEffect, useState, useCallback, memo } from 'react';
 import Animated, {
     FadeInDown, FadeIn,
     useSharedValue, withTiming, useAnimatedProps, Easing,
-    useAnimatedStyle, interpolate, Extrapolation,
+    useAnimatedStyle, interpolate,
     useAnimatedScrollHandler, withSequence,
 } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
@@ -541,7 +541,7 @@ export default function DashboardScreen() {
     });
 
     const headerFadeStyle = useAnimatedStyle(() => ({
-        opacity: interpolate(scrollY.value, [150, 240], [1, 0], Extrapolation.CLAMP),
+        opacity: interpolate(scrollY.value, [150, 240], [1, 0]),
     }));
 
     const cardBg = isDark ? '#18181B' : '#FFFFFF';
@@ -642,39 +642,54 @@ export default function DashboardScreen() {
                             );
                         })}
                     </ScrollView>
-
-                    <View style={{ alignItems: 'center', paddingHorizontal: 20, paddingTop: 4, paddingBottom: 20 }}>
-                        <CalorieRing consumed={totals.calories} goal={macroGoals.calories} isDark={isDark} />
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%', marginTop: 16 }}>
-                            <MacroRing value={totals.protein} goal={macroGoals.protein} color="#3B82F6" label="Protein" isDark={isDark} />
-                            <MacroRing value={totals.carbs} goal={macroGoals.carbs} color="#F59E0B" label="Kohlenhydrate" isDark={isDark} />
-                            <MacroRing value={totals.fat} goal={macroGoals.fat} color="#EF4444" label="Fett" isDark={isDark} />
-                        </View>
-                    </View>
                 </Animated.View>
 
-                <View style={{ backgroundColor: pageBg, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 24, paddingHorizontal: 16, minHeight: 800 }}>
-                    <Animated.View entering={FadeInDown.delay(300).duration(600)}>
-                        <WaterCard isDark={isDark} date={currentDate.toISOString().split('T')[0]} />
-                    </Animated.View>
+                <View className="flex-col lg:flex-row w-full max-w-7xl mx-auto lg:px-8">
+                    {/* LEFT COLUMN: Stats & Water */}
+                    <View className="w-full lg:w-[420px] lg:pr-8 pt-4">
+                        <Animated.View style={headerFadeStyle}>
+                            <View style={{ alignItems: 'center', paddingHorizontal: 20, paddingTop: 4, paddingBottom: 20 }}>
+                                <CalorieRing consumed={totals.calories} goal={macroGoals.calories} isDark={isDark} />
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%', marginTop: 24 }}>
+                                    <MacroRing value={totals.protein} goal={macroGoals.protein} color="#3B82F6" label="Protein" isDark={isDark} />
+                                    <MacroRing value={totals.carbs} goal={macroGoals.carbs} color="#F59E0B" label="Kohlenhydrate" isDark={isDark} />
+                                    <MacroRing value={totals.fat} goal={macroGoals.fat} color="#EF4444" label="Fett" isDark={isDark} />
+                                </View>
+                            </View>
+                        </Animated.View>
 
-                    <View className="flex-row items-center gap-x-2 mb-4 ml-1">
-                        <BookOpen size={20} color={textSecondary} />
-                        <Text className="text-sm font-bold text-textLight dark:text-zinc-500 uppercase tracking-widest">Mahlzeiten</Text>
+                        {/* Water Card moved to left column on desktop */}
+                        <View className="px-4 lg:px-0">
+                            <Animated.View entering={FadeInDown.delay(300).duration(600)}>
+                                <WaterCard isDark={isDark} date={currentDate.toISOString().split('T')[0]} />
+                            </Animated.View>
+                        </View>
                     </View>
 
-                    <Animated.View entering={FadeInDown.delay(500).duration(600)}>
-                        <MealSection title="Frühstück" type="breakfast" onAddPress={openPicker} />
-                    </Animated.View>
-                    <Animated.View entering={FadeInDown.delay(600).duration(600)}>
-                        <MealSection title="Mittagessen" type="lunch" onAddPress={openPicker} />
-                    </Animated.View>
-                    <Animated.View entering={FadeInDown.delay(700).duration(600)}>
-                        <MealSection title="Abendessen" type="dinner" onAddPress={openPicker} />
-                    </Animated.View>
-                    <Animated.View entering={FadeInDown.delay(800).duration(600)}>
-                        <MealSection title="Snacks" type="snack" onAddPress={openPicker} />
-                    </Animated.View>
+                    {/* RIGHT COLUMN: Meals */}
+                    <View className="flex-1 bg-background lg:bg-transparent rounded-t-3xl pt-8 px-4 lg:px-0 min-h-[800px]">
+                        <View className="flex-row items-center justify-between mb-6 ml-1">
+                            <View className="flex-row items-center gap-x-2">
+                                <BookOpen size={20} color={textSecondary} />
+                                <Text className="text-sm font-bold text-textLight dark:text-zinc-500 uppercase tracking-widest">Mahlzeiten</Text>
+                            </View>
+                        </View>
+
+                        <View className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                            <Animated.View entering={FadeInDown.delay(500).duration(600)}>
+                                <MealSection title="Frühstück" type="breakfast" onAddPress={openPicker} />
+                            </Animated.View>
+                            <Animated.View entering={FadeInDown.delay(600).duration(600)}>
+                                <MealSection title="Mittagessen" type="lunch" onAddPress={openPicker} />
+                            </Animated.View>
+                            <Animated.View entering={FadeInDown.delay(700).duration(600)}>
+                                <MealSection title="Abendessen" type="dinner" onAddPress={openPicker} />
+                            </Animated.View>
+                            <Animated.View entering={FadeInDown.delay(800).duration(600)}>
+                                <MealSection title="Snacks" type="snack" onAddPress={openPicker} />
+                            </Animated.View>
+                        </View>
+                    </View>
                 </View>
             </AnimatedScrollView>
 

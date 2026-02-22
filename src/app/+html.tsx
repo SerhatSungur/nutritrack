@@ -21,6 +21,21 @@ export default function Root({ children }: PropsWithChildren) {
 
                 {/* Google Identity Services (GSI) Script for Google Sign-In on Web (localhost & production) */}
                 <script src="https://accounts.google.com/gsi/client" async defer></script>
+                <script dangerouslySetInnerHTML={{
+                    __html: `
+                    window.addEventListener('error', function(event) {
+                        const div = document.createElement('div');
+                        div.style.cssText = 'position:fixed;top:0;left:0;right:0;background:red;color:white;z-index:9999;padding:20px;font-size:16px;overflow:auto;max-height:100vh;';
+                        div.textContent = 'ERROR: ' + event.message + '\\n' + event.filename + ':' + event.lineno + '\\n' + (event.error ? event.error.stack : '');
+                        document.body.appendChild(div);
+                    });
+                    window.addEventListener('unhandledrejection', function(event) {
+                        const div = document.createElement('div');
+                        div.style.cssText = 'position:fixed;top:50%;left:0;right:0;background:orange;color:white;z-index:9999;padding:20px;font-size:16px;overflow:auto;max-height:50vh;';
+                        div.textContent = 'PROMISE REJECTION: ' + (event.reason ? (event.reason.message || event.reason) : 'unknown reason') + '\\n' + (event.reason && event.reason.stack ? event.reason.stack : '');
+                        document.body.appendChild(div);
+                    });
+                `}} />
             </head>
             <body>{children}</body>
         </html>

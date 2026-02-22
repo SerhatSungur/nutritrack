@@ -1,3 +1,5 @@
+console.log("HELLO FROM APP ENTRY POINT - EVALUATION STARTED");
+
 import { Stack } from "expo-router";
 import "../global.css";
 import { View, Platform } from "react-native";
@@ -5,7 +7,7 @@ import { useColorScheme, vars } from "nativewind";
 import { StatusBar } from "expo-status-bar";
 import { useFonts, PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold } from "@expo-google-fonts/plus-jakarta-sans";
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAuthStore } from "../store/useAuthStore";
 import { syncService } from "../lib/syncService";
@@ -56,9 +58,11 @@ export default function RootLayout() {
         }
     }, [authInitialized, user]);
 
+    const [forceRender, setForceRender] = useState(false);
+
     useEffect(() => {
         const hideSplash = async () => {
-            if (fontsLoaded || fontError) {
+            if (fontsLoaded || fontError || forceRender) {
                 await SplashScreen.hideAsync().catch(() => { });
             }
         };
@@ -67,13 +71,14 @@ export default function RootLayout() {
         // Safety timeout for web to ensure we don't stay on a blank screen
         if (Platform.OS === 'web') {
             const timer = setTimeout(() => {
+                setForceRender(true);
                 SplashScreen.hideAsync().catch(() => { });
             }, 3000);
             return () => clearTimeout(timer);
         }
-    }, [fontsLoaded, fontError]);
+    }, [fontsLoaded, fontError, forceRender]);
 
-    if (!fontsLoaded && !fontError) {
+    if (!fontsLoaded && !fontError && !forceRender) {
         return null;
     }
 

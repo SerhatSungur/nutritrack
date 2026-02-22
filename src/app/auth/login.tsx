@@ -1,4 +1,4 @@
-import { View, Text, TextInput, ScrollView, ActivityIndicator, Alert, Platform } from 'react-native';
+import { View, Text, TextInput, ScrollView, ActivityIndicator, Alert, Platform, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
@@ -235,163 +235,187 @@ export default function LoginScreen() {
 
     const headerBg = isDark ? '#18181B' : '#FFFFFF';
     const pageBg = isDark ? '#09090B' : '#F4F4F5';
+    const { width } = useWindowDimensions();
+    const isDesktop = width >= 768;
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: pageBg }}>
-            <ScrollView
-                contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingVertical: 20 }}
-                keyboardShouldPersistTaps="handled"
-            >
-                {/* Back Button */}
-                <View
-                    onStartShouldSetResponder={() => true}
-                    onResponderRelease={() => router.back()}
-                    className="w-10 h-10 items-center justify-center rounded-full bg-white dark:bg-zinc-800 shadow-sm mb-10"
-                >
-                    <ChevronLeft size={24} color={isDark ? '#FAFAFA' : '#09090B'} />
+        <SafeAreaView style={{ flex: 1, backgroundColor: pageBg }} edges={['top', 'bottom']}>
+            <View className="flex-1 md:flex-row">
+                {/* Desktop Left Panel - Editorial Minimal Branding */}
+                <View className="hidden md:flex flex-1 bg-zinc-950 dark:bg-black items-center justify-center p-12 relative overflow-hidden border-r border-zinc-800/50">
+                    {/* Abstract gradients for premium feel */}
+                    <View className="absolute -top-32 -left-32 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px]" />
+                    <View className="absolute -bottom-32 -right-32 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[100px]" />
+
+                    <Animated.View entering={FadeInDown.duration(800).delay(200)} className="z-10 max-w-md">
+                        <Text style={{ fontFamily: 'PlusJakartaSans_800ExtraBold', letterSpacing: -1.5 }} className="text-6xl text-white mb-6">
+                            NutriTrack<Text className="text-primary">.</Text>
+                        </Text>
+                        <Text className="text-xl text-zinc-400 font-medium leading-relaxed">
+                            Dein minimalistischer Begleiter für strukturierte Ernährung und messbaren Fortschritt.
+                        </Text>
+                    </Animated.View>
                 </View>
 
-                <Animated.View entering={FadeInDown.delay(100).duration(600)}>
-                    <Text className="text-3xl font-bold text-text dark:text-zinc-50 mb-2">
-                        {mode === 'login' ? 'Willkommen zurück' : 'Account erstellen'}
-                    </Text>
-                    <Text className="text-base text-textLight dark:text-zinc-400 mb-8">
-                        {mode === 'login'
-                            ? 'Melde dich an, um deine Daten zu synchronisieren.'
-                            : 'Tritt NutriTrack bei und starte deine Reise.'}
-                    </Text>
-                </Animated.View>
-
-                {/* Form */}
-                <Animated.View entering={FadeInDown.delay(200).duration(600)}>
-                    {/* Email Field */}
-                    <View className="mb-5">
-                        <Text className="text-[11px] font-black text-textLight dark:text-zinc-500 uppercase tracking-[1.5px] ml-1 mb-2">Email Adresse</Text>
+                {/* Right Panel - Login Form */}
+                <View className="flex-1 justify-center bg-white dark:bg-[#09090B]">
+                    <ScrollView
+                        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: isDesktop ? 48 : 24, paddingVertical: isDesktop ? 60 : 20, justifyContent: 'center' }}
+                        keyboardShouldPersistTaps="handled"
+                        className="w-full max-w-xl mx-auto"
+                    >
+                        {/* Back Button */}
                         <View
-                            className={`flex-row items-center bg-white dark:bg-zinc-900 rounded-2xl border px-4 py-3.5 shadow-sm transition-all ${focusedField === 'email' ? 'border-primary shadow-md shadow-blue-500/5' : 'border-gray-100 dark:border-zinc-800'
-                                }`}
+                            onStartShouldSetResponder={() => true}
+                            onResponderRelease={() => router.back()}
+                            className="w-10 h-10 items-center justify-center rounded-full bg-white dark:bg-zinc-800 shadow-sm mb-10"
                         >
-                            <Mail size={18} color={focusedField === 'email' ? '#2563EB' : '#71717A'} />
-                            <TextInput
-                                placeholder="name@beispiel.de"
-                                placeholderTextColor="#A1A1AA"
-                                className="flex-1 text-text dark:text-zinc-100 text-[16px] font-medium ml-2"
-                                value={email}
-                                onChangeText={setEmail}
-                                autoCapitalize="none"
-                                keyboardType="email-address"
-                                onFocus={() => setFocusedField('email')}
-                                onBlur={() => setFocusedField(null)}
-                            />
+                            <ChevronLeft size={24} color={isDark ? '#FAFAFA' : '#09090B'} />
                         </View>
-                    </View>
 
-                    {/* Password Field */}
-                    <View className="mb-8">
-                        <Text className="text-[11px] font-black text-textLight dark:text-zinc-500 uppercase tracking-[1.5px] ml-1 mb-2">Passwort</Text>
-                        <View
-                            className={`flex-row items-center bg-white dark:bg-zinc-900 rounded-2xl border px-4 py-3.5 shadow-sm transition-all ${focusedField === 'password' ? 'border-primary shadow-md shadow-blue-500/5' : 'border-gray-100 dark:border-zinc-800'
-                                }`}
-                        >
-                            <Lock size={18} color={focusedField === 'password' ? '#2563EB' : '#71717A'} className="mr-6" />
-                            <TextInput
-                                placeholder="••••••••"
-                                placeholderTextColor="#A1A1AA"
-                                className="flex-1 text-text dark:text-zinc-100 text-[16px] font-medium ml-2"
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry
-                                onFocus={() => setFocusedField('password')}
-                                onBlur={() => setFocusedField(null)}
-                            />
-                        </View>
-                    </View>
-
-                    <View
-                        onStartShouldSetResponder={() => !isLoading}
-                        onResponderRelease={() => !isLoading && handleAuth()}
-                        style={{
-                            backgroundColor: '#2563EB',
-                            paddingVertical: 16,
-                            borderRadius: 16,
-                            alignItems: 'center',
-                            flexDirection: 'row',
-                            justifyContent: 'center',
-                            opacity: isLoading ? 0.7 : 1
-                        }}
-                        className="shadow-lg shadow-blue-500/30"
-                    >
-                        {isLoading ? (
-                            <ActivityIndicator color="#FFFFFF" />
-                        ) : (
-                            <>
-                                <Text className="text-white font-bold text-lg mr-2">
-                                    {mode === 'login' ? 'Einloggen' : 'Registrieren'}
-                                </Text>
-                                <ArrowRight size={20} color="#FFFFFF" />
-                            </>
-                        )}
-                    </View>
-
-                    {/* Social Logins */}
-                    <View className="mt-8 mb-4 flex-row items-center">
-                        <View className="flex-1 h-[1px] bg-gray-200 dark:bg-zinc-800" />
-                        <Text className="mx-4 text-xs font-semibold text-textLight dark:text-zinc-500 uppercase tracking-widest">Oder weiter mit</Text>
-                        <View className="flex-1 h-[1px] bg-gray-200 dark:bg-zinc-800" />
-                    </View>
-
-                    {Platform.OS === 'ios' && (
-                        <AppleAuthentication.AppleAuthenticationButton
-                            buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-                            buttonStyle={isDark ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-                            cornerRadius={16}
-                            style={{ width: '100%', height: 50, marginBottom: 16 }}
-                            onPress={handleAppleSignIn}
-                        />
-                    )}
-
-                    <View
-                        onStartShouldSetResponder={() => true}
-                        onResponderRelease={handleGoogleSignIn}
-                        style={{
-                            backgroundColor: isDark ? '#27272A' : '#FFFFFF',
-                            borderColor: isDark ? '#3F3F46' : '#E5E7EB',
-                            borderWidth: 1,
-                            paddingVertical: 14,
-                            borderRadius: 16,
-                            alignItems: 'center',
-                            flexDirection: 'row',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <GoogleIcon />
-                        <Text className="text-text dark:text-zinc-50 font-bold text-[16px]">
-                            Mit Google fortfahren
-                        </Text>
-                    </View>
-                </Animated.View>
-
-                {/* Switch Mode */}
-                <Animated.View
-                    entering={FadeInUp.delay(300).duration(600)}
-                    className="mt-auto items-center py-6"
-                >
-                    <View
-                        onStartShouldSetResponder={() => true}
-                        onResponderRelease={() => {
-                            haptics.selection();
-                            setMode(mode === 'login' ? 'signup' : 'login');
-                        }}
-                    >
-                        <Text className="text-textLight dark:text-zinc-400">
-                            {mode === 'login' ? 'Noch keinen Account? ' : 'Bereits Mitglied? '}
-                            <Text className="text-primary font-bold">
-                                {mode === 'login' ? 'Jetzt registrieren' : 'Hier anmelden'}
+                        <Animated.View entering={FadeInDown.delay(100).duration(600)}>
+                            <Text className="text-3xl font-bold text-text dark:text-zinc-50 mb-2">
+                                {mode === 'login' ? 'Willkommen zurück' : 'Account erstellen'}
                             </Text>
-                        </Text>
-                    </View>
-                </Animated.View>
-            </ScrollView>
+                            <Text className="text-base text-textLight dark:text-zinc-400 mb-8">
+                                {mode === 'login'
+                                    ? 'Melde dich an, um deine Daten zu synchronisieren.'
+                                    : 'Tritt NutriTrack bei und starte deine Reise.'}
+                            </Text>
+                        </Animated.View>
+
+                        {/* Form */}
+                        <Animated.View entering={FadeInDown.delay(200).duration(600)}>
+                            {/* Email Field */}
+                            <View className="mb-5">
+                                <Text className="text-[11px] font-black text-textLight dark:text-zinc-500 uppercase tracking-[1.5px] ml-1 mb-2">Email Adresse</Text>
+                                <View
+                                    className={`flex-row items-center bg-white dark:bg-zinc-900 rounded-2xl border px-4 py-3.5 shadow-sm transition-all ${focusedField === 'email' ? 'border-primary shadow-md shadow-blue-500/5' : 'border-gray-100 dark:border-zinc-800'
+                                        }`}
+                                >
+                                    <Mail size={18} color={focusedField === 'email' ? '#2563EB' : '#71717A'} />
+                                    <TextInput
+                                        placeholder="name@beispiel.de"
+                                        placeholderTextColor="#A1A1AA"
+                                        className="flex-1 text-text dark:text-zinc-100 text-[16px] font-medium ml-2"
+                                        value={email}
+                                        onChangeText={setEmail}
+                                        autoCapitalize="none"
+                                        keyboardType="email-address"
+                                        onFocus={() => setFocusedField('email')}
+                                        onBlur={() => setFocusedField(null)}
+                                    />
+                                </View>
+                            </View>
+
+                            {/* Password Field */}
+                            <View className="mb-8">
+                                <Text className="text-[11px] font-black text-textLight dark:text-zinc-500 uppercase tracking-[1.5px] ml-1 mb-2">Passwort</Text>
+                                <View
+                                    className={`flex-row items-center bg-white dark:bg-zinc-900 rounded-2xl border px-4 py-3.5 shadow-sm transition-all ${focusedField === 'password' ? 'border-primary shadow-md shadow-blue-500/5' : 'border-gray-100 dark:border-zinc-800'
+                                        }`}
+                                >
+                                    <Lock size={18} color={focusedField === 'password' ? '#2563EB' : '#71717A'} className="mr-6" />
+                                    <TextInput
+                                        placeholder="••••••••"
+                                        placeholderTextColor="#A1A1AA"
+                                        className="flex-1 text-text dark:text-zinc-100 text-[16px] font-medium ml-2"
+                                        value={password}
+                                        onChangeText={setPassword}
+                                        secureTextEntry
+                                        onFocus={() => setFocusedField('password')}
+                                        onBlur={() => setFocusedField(null)}
+                                    />
+                                </View>
+                            </View>
+
+                            <View
+                                onStartShouldSetResponder={() => !isLoading}
+                                onResponderRelease={() => !isLoading && handleAuth()}
+                                style={{
+                                    backgroundColor: '#2563EB',
+                                    paddingVertical: 16,
+                                    borderRadius: 16,
+                                    alignItems: 'center',
+                                    flexDirection: 'row',
+                                    justifyContent: 'center',
+                                    opacity: isLoading ? 0.7 : 1
+                                }}
+                                className="shadow-lg shadow-blue-500/30"
+                            >
+                                {isLoading ? (
+                                    <ActivityIndicator color="#FFFFFF" />
+                                ) : (
+                                    <>
+                                        <Text className="text-white font-bold text-lg mr-2">
+                                            {mode === 'login' ? 'Einloggen' : 'Registrieren'}
+                                        </Text>
+                                        <ArrowRight size={20} color="#FFFFFF" />
+                                    </>
+                                )}
+                            </View>
+
+                            {/* Social Logins */}
+                            <View className="mt-8 mb-4 flex-row items-center">
+                                <View className="flex-1 h-[1px] bg-gray-200 dark:bg-zinc-800" />
+                                <Text className="mx-4 text-xs font-semibold text-textLight dark:text-zinc-500 uppercase tracking-widest">Oder weiter mit</Text>
+                                <View className="flex-1 h-[1px] bg-gray-200 dark:bg-zinc-800" />
+                            </View>
+
+                            {Platform.OS === 'ios' && (
+                                <AppleAuthentication.AppleAuthenticationButton
+                                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                                    buttonStyle={isDark ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                                    cornerRadius={16}
+                                    style={{ width: '100%', height: 50, marginBottom: 16 }}
+                                    onPress={handleAppleSignIn}
+                                />
+                            )}
+
+                            <View
+                                onStartShouldSetResponder={() => true}
+                                onResponderRelease={handleGoogleSignIn}
+                                style={{
+                                    backgroundColor: isDark ? '#27272A' : '#FFFFFF',
+                                    borderColor: isDark ? '#3F3F46' : '#E5E7EB',
+                                    borderWidth: 1,
+                                    paddingVertical: 14,
+                                    borderRadius: 16,
+                                    alignItems: 'center',
+                                    flexDirection: 'row',
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <GoogleIcon />
+                                <Text className="text-text dark:text-zinc-50 font-bold text-[16px]">
+                                    Mit Google fortfahren
+                                </Text>
+                            </View>
+                        </Animated.View>
+
+                        {/* Switch Mode */}
+                        <Animated.View
+                            entering={FadeInUp.delay(300).duration(600)}
+                            className="mt-auto items-center py-6"
+                        >
+                            <View
+                                onStartShouldSetResponder={() => true}
+                                onResponderRelease={() => {
+                                    haptics.selection();
+                                    setMode(mode === 'login' ? 'signup' : 'login');
+                                }}
+                            >
+                                <Text className="text-textLight dark:text-zinc-400">
+                                    {mode === 'login' ? 'Noch keinen Account? ' : 'Bereits Mitglied? '}
+                                    <Text className="text-primary font-bold">
+                                        {mode === 'login' ? 'Jetzt registrieren' : 'Hier anmelden'}
+                                    </Text>
+                                </Text>
+                            </View>
+                        </Animated.View>
+                    </ScrollView>
+                </View>
+            </View>
         </SafeAreaView>
     );
 }
