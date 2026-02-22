@@ -15,9 +15,9 @@ export function DesktopSidebar() {
     const activeRoute = segments[segments.length - 1] || 'index';
 
     const bg = isDark ? '#18181B' : '#FFFFFF';
-    const border = isDark ? '#27272A' : '#E5E7EB';
+    const border = isDark ? 'rgba(255,255,255,0.05)' : '#E5E7EB';
     const textPrimary = isDark ? '#FAFAFA' : '#09090B';
-    const textSecondary = isDark ? '#A1A1AA' : '#71717A';
+    const textSecondary = isDark ? '#A1A1AA' : '#64748B';
 
     const navItems = [
         { name: 'index', label: 'Übersicht', icon: Home },

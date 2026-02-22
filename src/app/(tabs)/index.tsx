@@ -185,7 +185,7 @@ function WaterCard({ isDark, date }: { isDark: boolean, date: string }) {
     }));
 
     return (
-        <View className="bg-card dark:bg-zinc-900 rounded-3xl p-6 mb-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100/50 dark:border-zinc-800/50">
+        <View className="bg-white dark:bg-zinc-900 rounded-3xl p-6 mb-6 shadow-sm border border-gray-100 dark:border-white/5">
             <View className="flex-row justify-between items-center mb-5">
                 <View className="flex-row items-center gap-x-3">
                     <View className="bg-blue-50 dark:bg-blue-500/10 w-11 h-11 rounded-2xl items-center justify-center">
@@ -255,8 +255,8 @@ const MealSection = ({ title, type, onAddPress }: { title: string; type: MealTyp
     const sectionCalories = logs.reduce((sum, log) => sum + log.calories, 0);
 
     return (
-        <View className="bg-card dark:bg-zinc-900 rounded-2xl p-4 mb-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-            <View className="flex-row justify-between items-center mb-3">
+        <View className="bg-white dark:bg-zinc-900 rounded-2xl p-5 mb-4 shadow-sm border border-gray-100 dark:border-white/5">
+            <View className="flex-row justify-between items-center mb-4">
                 <Text className="text-lg font-bold text-text dark:text-zinc-50">{title}</Text>
                 <Text className="text-lg font-bold text-primary">{sectionCalories} kcal</Text>
             </View>
@@ -545,16 +545,14 @@ export default function DashboardScreen() {
     }));
 
     const cardBg = isDark ? '#18181B' : '#FFFFFF';
-    const pageBg = isDark ? '#09090B' : '#F4F4F5';
+    const pageBg = isDark ? '#09090B' : '#F8FAFC'; // Slate-50 for light mode depth
     const textPrimary = isDark ? '#FAFAFA' : '#09090B';
-    const textSecondary = isDark ? '#A1A1AA' : '#71717A';
-    const dateBg = isDark ? '#27272A' : '#F9FAFB';
-    const dateBorder = isDark ? '#3F3F46' : '#F3F4F6';
+    const textSecondary = isDark ? '#A1A1AA' : '#64748B';
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: cardBg }} edges={['top']}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: pageBg }} edges={['top']}>
             <View style={{
-                backgroundColor: cardBg,
+                backgroundColor: pageBg,
                 paddingHorizontal: 20,
                 height: 70,
                 flexDirection: 'row',
@@ -591,7 +589,7 @@ export default function DashboardScreen() {
                 scrollEventThrottle={16}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 24 }}
-                style={{ flex: 1, backgroundColor: cardBg }}
+                style={{ flex: 1, backgroundColor: pageBg }}
             >
                 <Animated.View style={headerFadeStyle}>
                     <ScrollView

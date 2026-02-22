@@ -160,11 +160,13 @@ export default function RecipesScreen() {
         router.push('/');
     };
 
+    const pageBg = isDark ? '#09090B' : '#F8FAFC'; // Slate-50 for light mode depth
+
     return (
-        <SafeAreaView className="flex-1 bg-card dark:bg-zinc-900" edges={['top']}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: pageBg }} edges={['top']}>
             {/* Header */}
             <View style={{
-                backgroundColor: isDark ? '#18181B' : '#FFFFFF',
+                backgroundColor: pageBg,
                 paddingHorizontal: 20,
                 height: 70,
                 flexDirection: 'row',
@@ -197,7 +199,7 @@ export default function RecipesScreen() {
                 </TouchableOpacity>
             </View>
 
-            <View className="px-5 pt-2 pb-4 bg-white dark:bg-zinc-950">
+            <View style={{ backgroundColor: pageBg }} className="px-5 pt-2 pb-4">
                 <View className="mb-4">
                     <SegmentedControl
                         options={[
@@ -244,7 +246,7 @@ export default function RecipesScreen() {
                                 <TouchableOpacity
                                     activeOpacity={0.9}
                                     onPress={() => router.push(`/recipes/${recipe.id}`)}
-                                    className="bg-card dark:bg-zinc-900 rounded-[24px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100/50 dark:border-zinc-800/50"
+                                    className="bg-white dark:bg-zinc-900 rounded-[24px] p-5 shadow-sm border border-gray-100 dark:border-white/5"
                                 >
                                     <View className="flex-row justify-between items-start mb-4">
                                         <View className="flex-1 pr-2">

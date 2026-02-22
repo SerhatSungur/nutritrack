@@ -315,11 +315,11 @@ export default function ProfileScreen() {
         await signOut();
     };
 
-    const headerBg = isDark ? '#18181B' : '#FFFFFF';
-    const pageBg = isDark ? '#09090B' : '#F4F4F5';
+    const headerBg = isDark ? '#09090B' : '#F8FAFC'; // Match pageBg
+    const pageBg = isDark ? '#09090B' : '#F8FAFC'; // Slate-50 for light mode depth
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: headerBg }} edges={['top']}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: pageBg }} edges={['top']}>
             <View style={{
                 backgroundColor: headerBg,
                 paddingHorizontal: 20,
@@ -347,7 +347,7 @@ export default function ProfileScreen() {
             >
                 {/* Account Section */}
                 <Animated.View entering={FadeInDown.delay(100).duration(600)}>
-                    <View className="bg-card dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)] items-center">
+                    <View className="bg-white dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-sm border border-gray-100 dark:border-white/5 items-center">
                         <View className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full items-center justify-center mb-4">
                             <User size={40} color="#2563EB" />
                         </View>
@@ -426,7 +426,7 @@ export default function ProfileScreen() {
 
                 {/* Preferences Section */}
                 <Animated.View entering={FadeInDown.delay(200).duration(600)}>
-                    <View className="bg-card dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                    <View className="bg-white dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-sm border border-gray-100 dark:border-white/5">
                         <Text className="text-sm font-bold text-textLight dark:text-zinc-400 uppercase tracking-wider mb-4 ml-1">Einstellungen</Text>
 
                         <View className="flex-row items-center justify-between py-3 border-b border-gray-100 dark:border-zinc-800">
@@ -449,7 +449,7 @@ export default function ProfileScreen() {
 
                 {/* Body Metrics Section */}
                 <Animated.View entering={FadeInDown.delay(300).duration(600)}>
-                    <View className="bg-card dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                    <View className="bg-white dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-sm border border-gray-100 dark:border-white/5">
                         <Text className="text-sm font-bold text-textLight dark:text-zinc-400 uppercase tracking-wider mb-5 ml-1">Körper & Biometrie</Text>
 
                         <View className="flex-row items-center justify-between py-3 border-b border-gray-100 dark:border-zinc-800">
@@ -554,7 +554,7 @@ export default function ProfileScreen() {
 
                 {/* Macro Goals Section */}
                 <Animated.View entering={FadeInDown.delay(400).duration(600)}>
-                    <View className="bg-card dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                    <View className="bg-white dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-sm border border-gray-100 dark:border-white/5">
                         <View className="flex-row items-center justify-between mb-5 ml-1">
                             <View className="flex-row items-center gap-x-2">
                                 <Target size={20} color="#10B981" />
@@ -597,7 +597,7 @@ export default function ProfileScreen() {
 
                 {/* Water Goal Section */}
                 <Animated.View entering={FadeInDown.delay(500).duration(600)}>
-                    <View className="bg-card dark:bg-zinc-900 rounded-3xl p-5 mb-8 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                    <View className="bg-white dark:bg-zinc-900 rounded-3xl p-5 mb-8 shadow-sm border border-gray-100 dark:border-white/5">
                         <View className="flex-row items-center mb-4 ml-1 gap-x-2">
                             <Droplets size={20} color="#3B82F6" />
                             <Text className="text-sm font-bold text-textLight dark:text-zinc-400 uppercase tracking-wider">Wasser-Ziel</Text>
