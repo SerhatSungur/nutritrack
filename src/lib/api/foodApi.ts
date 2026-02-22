@@ -30,7 +30,7 @@ function parseFoodItem(p: any): FoodItem | null {
     };
 }
 
-async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout = 5000) {
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout = 12000) {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeout);
     try {

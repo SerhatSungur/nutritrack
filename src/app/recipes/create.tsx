@@ -1,10 +1,11 @@
 import { View, Text, TextInput, ScrollView, ActivityIndicator } from 'react-native';
+import { CustomSwitch } from '../../components/CustomSwitch';
 import { useColorScheme } from 'nativewind';
 import { useState, useEffect } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useLogStore, RecipeIngredient } from '../../store/useLogStore';
 import { searchFood, FoodItem } from '../../lib/api/foodApi';
-import { X, Search, Plus, ScanLine, Star, ChevronLeft } from 'lucide-react-native';
+import { X, Search, Plus, ScanLine, Star, ChevronLeft, Share2, Globe } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { haptics } from '../../lib/haptics';
@@ -84,6 +85,7 @@ export default function CreateRecipeScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<FoodItem[]>([]);
     const [ingredients, setIngredients] = useState<RecipeIngredient[]>([]);
+    const [isPublic, setIsPublic] = useState(false);
     const [loading, setLoading] = useState(false);
 
     // Pre-fill when editing an existing recipe
@@ -93,6 +95,7 @@ export default function CreateRecipeScreen() {
             if (recipeToEdit) {
                 setName(recipeToEdit.name);
                 setIngredients(recipeToEdit.ingredients || []);
+                setIsPublic(recipeToEdit.is_public || false);
             }
         }
     }, [editId]);
@@ -162,9 +165,9 @@ export default function CreateRecipeScreen() {
         if (!name || ingredients.length === 0) return;
 
         if (editId && typeof editId === 'string') {
-            updateRecipe(editId, { name, ingredients });
+            updateRecipe(editId, { name, ingredients, is_public: isPublic });
         } else {
-            addRecipe({ name, ingredients });
+            addRecipe({ name, ingredients, is_public: isPublic });
         }
         router.back();
     };
@@ -224,6 +227,22 @@ export default function CreateRecipeScreen() {
                         className="border-b border-gray-200 dark:border-zinc-700 py-3 text-lg font-medium text-text dark:text-zinc-50"
                         placeholderTextColor="#9CA3AF"
                     />
+
+                    <View className="flex-row items-center justify-between mt-6 pt-4 border-t border-gray-100 dark:border-zinc-800">
+                        <View className="flex-row items-center gap-x-3">
+                            <View className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                <Globe size={18} color="#2563EB" />
+                            </View>
+                            <View>
+                                <Text className="text-base font-semibold text-text dark:text-zinc-50">Öffentlich teilen</Text>
+                                <Text className="text-xs text-textLight dark:text-zinc-400">Für die Community sichtbar machen</Text>
+                            </View>
+                        </View>
+                        <CustomSwitch
+                            value={isPublic}
+                            onValueChange={setIsPublic}
+                        />
+                    </View>
                 </Animated.View>
 
                 {/* Current Ingredients */}

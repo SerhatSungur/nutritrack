@@ -57,6 +57,7 @@ export const syncService = {
                     total_carbs: recipe.totalCarbs,
                     total_fat: recipe.totalFat,
                     notes: recipe.notes,
+                    is_public: recipe.is_public || false
                 });
             }
 
@@ -123,9 +124,62 @@ export const syncService = {
                 useLogStore.setState({ logs: formattedLogs });
             }
 
+            // 3. Fetch Recipes
+            const { data: recipes } = await supabase
+                .from('recipes')
+                .select('*')
+                .eq('user_id', user.id);
+
+            if (recipes) {
+                const formattedRecipes = recipes.map(r => ({
+                    id: r.id,
+                    name: r.name,
+                    ingredients: r.ingredients,
+                    totalCalories: r.total_calories,
+                    totalProtein: r.total_protein,
+                    totalCarbs: r.total_carbs,
+                    totalFat: r.total_fat,
+                    notes: r.notes,
+                    is_public: r.is_public
+                }));
+                useLogStore.setState({ recipes: formattedRecipes });
+            }
+
             console.log('Sync pull successful');
         } catch (error) {
             console.error('Sync pull failed:', error);
         }
     },
+
+    /**
+     * Fetches public recipes from the community.
+     */
+    async fetchPublicRecipes() {
+        try {
+            const { data, error } = await supabase
+                .from('recipes')
+                .select('*')
+                .eq('is_public', true)
+                .order('created_at', { ascending: false })
+                .limit(50);
+
+            if (error) throw error;
+
+            return data.map(r => ({
+                id: r.id,
+                name: r.name,
+                ingredients: r.ingredients,
+                totalCalories: r.total_calories,
+                totalProtein: r.total_protein,
+                totalCarbs: r.total_carbs,
+                totalFat: r.total_fat,
+                notes: r.notes,
+                is_public: r.is_public,
+                user_id: r.user_id // Keep track of creator
+            }));
+        } catch (error) {
+            console.error('Failed to fetch public recipes:', error);
+            return [];
+        }
+    }
 };

@@ -1,14 +1,14 @@
 import {
     View, Text, ScrollView,
     Dimensions, Pressable, TouchableOpacity,
-    Modal, FlatList, TextInput,
+    Modal, FlatList, TextInput, Alert,
 } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLogStore, MealType, Recipe } from '../../store/useLogStore';
 import { format, subDays, addDays, isSameDay } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { Plus, Droplets, BookOpen, ChevronRight, X, Scale, Info, Check } from 'lucide-react-native';
+import { Plus, Droplets, BookOpen, ChevronRight, X, Scale, Info, Check, Activity, Target, User, RefreshCw, LogOut, PlusCircle, Trash2, Edit2 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { haptics } from '../../lib/haptics';
 import { useRef, useEffect, useState, useCallback, memo } from 'react';
@@ -162,7 +162,7 @@ function WaterCard({ isDark, date }: { isDark: boolean, date: string }) {
 
     const liters = (waterIntake / 1000).toFixed(1);
     const goalLiters = (waterGoal / 1000).toFixed(1);
-    const AMOUNTS = [250, 350, 500];
+    const AMOUNTS = [100, 250, 500];
 
     useEffect(() => {
         progress.value = withTiming(Math.min(waterIntake / waterGoal, 1), {
@@ -192,7 +192,7 @@ function WaterCard({ isDark, date }: { isDark: boolean, date: string }) {
                         <Droplets size={22} color="#3B82F6" />
                     </View>
                     <View>
-                        <Text className="text-lg font-extrabold text-text dark:text-zinc-50">Wasseraufnahme</Text>
+                        <Text className="text-lg font-extrabold text-text dark:text-zinc-50">Wasser</Text>
                         <Text className="text-xs font-semibold text-textLight dark:text-zinc-500 uppercase tracking-widest">Tagesziel: {goalLiters}L</Text>
                     </View>
                 </View>
@@ -210,8 +210,8 @@ function WaterCard({ isDark, date }: { isDark: boolean, date: string }) {
 
             <View className="flex-row gap-x-3">
                 {AMOUNTS.map(ml => {
-                    const bgColor = isDark ? '#27272A' : '#F9FAFB';
-                    const borderColor = isDark ? '#3F3F46' : '#F3F4F6';
+                    const bgColor = isDark ? '#1C1C1E' : '#F9FBFF';
+                    const borderColor = isDark ? '#2C2C2E' : '#E8F0FE';
                     return (
                         <TouchableOpacity
                             key={ml}
@@ -228,15 +228,15 @@ function WaterCard({ isDark, date }: { isDark: boolean, date: string }) {
                             style={{
                                 flex: 1,
                                 alignItems: 'center',
-                                paddingVertical: 12,
+                                paddingVertical: 10,
                                 backgroundColor: bgColor,
-                                borderRadius: 16,
+                                borderRadius: 12,
                                 borderWidth: 1,
                                 borderColor: borderColor,
                             }}
                         >
-                            <Text style={{ fontSize: 14, fontWeight: '900', color: isDark ? '#FAFAFA' : '#09090B' }}>+{ml}</Text>
-                            <Text style={{ fontSize: 10, fontWeight: '700', color: isDark ? '#71717A' : '#9CA3AF', textTransform: 'uppercase' }}>ml</Text>
+                            <Text style={{ fontSize: 13, fontWeight: '900', color: isDark ? '#FAFAFA' : '#09090B' }}>+{ml}</Text>
+                            <Text style={{ fontSize: 9, fontWeight: '700', color: isDark ? '#71717A' : '#9CA3AF', textTransform: 'uppercase', marginTop: -1 }}>ml</Text>
                         </TouchableOpacity>
                     );
                 })}
@@ -267,7 +267,7 @@ const MealSection = ({ title, type, onAddPress }: { title: string; type: MealTyp
                         <View>
                             <Text className="text-base font-medium text-text dark:text-zinc-50">{log.name}</Text>
                             <Text className="text-sm text-textLight dark:text-zinc-400">
-                                P: {log.protein}g · C: {log.carbs}g · F: {log.fat}g
+                                PROT: {log.protein}g · KH: {log.carbs}g · FETT: {log.fat}g
                             </Text>
                         </View>
                         <Text className="font-semibold text-text dark:text-zinc-50">{log.calories}</Text>
@@ -283,10 +283,10 @@ const MealSection = ({ title, type, onAddPress }: { title: string; type: MealTyp
                     haptics.lightImpact();
                     onAddPress(type);
                 }}
-                className="flex-row items-center mt-3 pt-3 border-t border-gray-100 dark:border-zinc-800"
+                className="flex-row items-center justify-center mt-3 p-3 bg-blue-50/50 dark:bg-blue-500/10 rounded-xl"
             >
-                <Plus size={20} color="#2563EB" />
-                <Text className="ml-2 font-semibold text-primary">Rezept hinzufügen</Text>
+                <Plus size={18} color="#2563EB" />
+                <Text className="ml-2 font-bold text-primary text-sm">Rezept hinzufügen</Text>
             </TouchableOpacity>
         </View>
     );
@@ -307,6 +307,7 @@ function RecipePickerModal({
     const allLogs = useLogStore((s) => s.logs);
     const addLog = useLogStore((s) => s.addLog);
     const currentDate = useLogStore((s) => s.currentDate);
+    const router = useRouter(); // Added router for navigation
 
     const usageCount = useCallback((name: string) =>
         allLogs.filter(l => l.name === name).length
@@ -411,40 +412,61 @@ function RecipePickerModal({
                         keyExtractor={(r) => r.id}
                         contentContainerStyle={{ padding: 16 }}
                         renderItem={({ item: recipe }) => (
-                            <Pressable
+                            <TouchableOpacity
+                                activeOpacity={0.7}
                                 onPress={() => handleAdd(recipe)}
-                                style={({ pressed }) => ({
-                                    backgroundColor: isDark ? '#27272A' : '#F9FAFB',
-                                    borderRadius: 18, padding: 18, marginBottom: 12,
-                                    flexDirection: 'row', alignItems: 'center',
-                                    opacity: pressed ? 0.7 : 1
-                                })}
+                                style={{
+                                    backgroundColor: isDark ? '#1C1C1E' : '#F9FBFF',
+                                    borderRadius: 18,
+                                    padding: 18,
+                                    marginBottom: 12,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    borderWidth: 1,
+                                    borderColor: isDark ? '#2C2C2E' : '#F3F4F6'
+                                }}
                             >
                                 <View style={{ flex: 1 }}>
                                     <Text style={{ fontSize: 17, fontWeight: '800', color: textPrimary, marginBottom: 4 }}>{recipe.name}</Text>
                                     <Text style={{ fontSize: 13, color: textSecondary }}>
-                                        {recipe.totalCalories} kcal · P {recipe.totalProtein}g · K {recipe.totalCarbs}g · F {recipe.totalFat}g
+                                        {recipe.totalCalories} kcal · PROT {recipe.totalProtein}g · KH {recipe.totalCarbs}g · FETT {recipe.totalFat}g
                                     </Text>
                                     <Text style={{ fontSize: 12, color: isDark ? '#52525B' : '#9CA3AF', marginTop: 4 }}>
                                         {recipe.ingredients.length} {recipe.ingredients.length === 1 ? 'Zutat' : 'Zutaten'}
                                     </Text>
                                 </View>
-                                <ChevronRight size={20} color={isDark ? '#52525B' : '#D1D5DB'} />
-                            </Pressable>
+                                <View style={{
+                                    width: 38,
+                                    height: 38,
+                                    borderRadius: 12,
+                                    backgroundColor: isDark ? '#27272A' : '#EBF2FF',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}>
+                                    <PlusCircle size={22} color="#2563EB" />
+                                </View>
+                            </TouchableOpacity>
                         )}
                         ListFooterComponent={
-                            <Pressable
+                            <TouchableOpacity
+                                activeOpacity={0.7}
                                 onPress={onCreateNew}
-                                style={({ pressed }) => ({
-                                    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-                                    paddingVertical: 14, borderRadius: 14, marginTop: 4,
-                                    borderWidth: 1.5, borderColor: '#2563EB', borderStyle: 'dashed',
-                                    opacity: pressed ? 0.7 : 1
-                                })}
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    paddingVertical: 14,
+                                    borderRadius: 14,
+                                    marginTop: 4,
+                                    borderWidth: 1.5,
+                                    borderColor: '#2563EB',
+                                    borderStyle: 'dashed',
+                                    backgroundColor: isDark ? 'rgba(37, 99, 235, 0.1)' : 'rgba(37, 99, 235, 0.05)'
+                                }}
                             >
                                 <Plus size={18} color="#2563EB" />
                                 <Text style={{ marginLeft: 6, color: '#2563EB', fontWeight: '700', fontSize: 14 }}>Neues Rezept erstellen</Text>
-                            </Pressable>
+                            </TouchableOpacity>
                         }
                     />
                 )}
@@ -487,14 +509,27 @@ export default function DashboardScreen() {
     const dateScrollRef = useRef<ScrollView>(null);
     const scrollY = useSharedValue(0);
 
+    const isFirstRender = useRef(true);
+
     useEffect(() => {
         const index = STATIC_WEEK_DATES.findIndex(d => isSameDay(d, currentDate));
         if (index !== -1) {
-            setTimeout(() => {
+            const performScroll = () => {
                 const itemWidth = 56;
-                const center = index * itemWidth - SCREEN_WIDTH / 2 + itemWidth / 2;
-                dateScrollRef.current?.scrollTo({ x: Math.max(0, center), animated: false });
-            }, 100);
+                const paddingOffset = 16;
+                const scrollX = (index * itemWidth + itemWidth / 2 + paddingOffset) - SCREEN_WIDTH / 2;
+                dateScrollRef.current?.scrollTo({
+                    x: Math.max(0, scrollX),
+                    animated: !isFirstRender.current
+                });
+                isFirstRender.current = false;
+            };
+
+            if (isFirstRender.current) {
+                setTimeout(performScroll, 100);
+            } else {
+                performScroll();
+            }
         }
     }, [currentDate]);
 
@@ -534,21 +569,21 @@ export default function DashboardScreen() {
                 }}>
                     {format(currentDate, 'MMMM yyyy', { locale: de })}
                 </Text>
-                <Pressable
+                <TouchableOpacity
+                    activeOpacity={0.7}
                     onPress={() => {
                         haptics.lightImpact();
                         setDate(new Date());
                     }}
-                    style={({ pressed }) => ({
-                        backgroundColor: isDark ? '#27272A' : '#F3F4F6',
+                    style={{
+                        backgroundColor: isDark ? '#1C1C1E' : '#F3F4F6',
                         paddingHorizontal: 12,
                         paddingVertical: 6,
                         borderRadius: 999,
-                        opacity: pressed ? 0.7 : 1
-                    })}
+                    }}
                 >
                     <Text style={{ fontSize: 12, fontWeight: '600', color: textSecondary }}>Heute</Text>
-                </Pressable>
+                </TouchableOpacity>
             </View>
 
             <AnimatedScrollView
@@ -567,28 +602,43 @@ export default function DashboardScreen() {
                     >
                         {STATIC_WEEK_DATES.map((date) => {
                             const selected = isSameDay(date, currentDate);
+                            const bgColor = selected ? '#2563EB' : (isDark ? '#1C1C1E' : '#F9FBFF');
+                            const borderColor = selected ? '#2563EB' : (isDark ? '#2C2C2E' : '#E8F0FE');
+                            const textColor = selected ? '#FFFFFF' : (isDark ? '#A1A1AA' : '#71717A');
+                            const numberColor = selected ? '#FFFFFF' : (isDark ? '#FAFAFA' : '#09090B');
+
                             return (
-                                <Pressable
+                                <TouchableOpacity
                                     key={date.toISOString()}
+                                    activeOpacity={0.7}
                                     onPress={() => {
                                         haptics.selection();
                                         setDate(date);
                                     }}
-                                    style={({ pressed }) => ([
-                                        { alignItems: 'center', justifyContent: 'center', marginRight: 8, borderRadius: 14, width: 48, height: 56 },
-                                        selected
-                                            ? { backgroundColor: '#2563EB' }
-                                            : { backgroundColor: dateBg, borderWidth: 1, borderColor: dateBorder },
-                                        { opacity: pressed ? 0.7 : 1 }
-                                    ])}
+                                    style={{
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        marginRight: 8,
+                                        borderRadius: 14,
+                                        width: 48,
+                                        height: 56,
+                                        backgroundColor: bgColor,
+                                        borderWidth: 1,
+                                        borderColor: borderColor,
+                                        shadowColor: selected ? '#2563EB' : 'transparent',
+                                        shadowOffset: { width: 0, height: 4 },
+                                        shadowOpacity: selected ? 0.3 : 0,
+                                        shadowRadius: 8,
+                                        elevation: selected ? 4 : 0
+                                    }}
                                 >
-                                    <Text style={{ fontSize: 11, fontWeight: '500', marginBottom: 2, color: selected ? 'rgba(255,255,255,0.8)' : textSecondary }}>
+                                    <Text style={{ fontSize: 10, fontWeight: '700', marginBottom: 2, color: textColor, textTransform: 'uppercase' }}>
                                         {format(date, 'EEE', { locale: de })}
                                     </Text>
-                                    <Text style={{ fontSize: 16, fontWeight: 'bold', color: selected ? '#FFFFFF' : textPrimary }}>
+                                    <Text style={{ fontSize: 16, fontWeight: '800', color: numberColor }}>
                                         {format(date, 'd')}
                                     </Text>
-                                </Pressable>
+                                </TouchableOpacity>
                             );
                         })}
                     </ScrollView>

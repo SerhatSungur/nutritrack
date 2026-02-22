@@ -57,8 +57,19 @@ export default function RootLayout() {
     }, [authInitialized, user]);
 
     useEffect(() => {
-        if (fontsLoaded || fontError) {
-            SplashScreen.hideAsync().catch(() => { });
+        const hideSplash = async () => {
+            if (fontsLoaded || fontError) {
+                await SplashScreen.hideAsync().catch(() => { });
+            }
+        };
+        hideSplash();
+
+        // Safety timeout for web to ensure we don't stay on a blank screen
+        if (Platform.OS === 'web') {
+            const timer = setTimeout(() => {
+                SplashScreen.hideAsync().catch(() => { });
+            }, 3000);
+            return () => clearTimeout(timer);
         }
     }, [fontsLoaded, fontError]);
 

@@ -1,11 +1,12 @@
 import {
-    View, Text, TextInput, ScrollView, Switch,
+    View, Text, TextInput, ScrollView,
     Pressable, Keyboard, Appearance,
     Modal, ActivityIndicator, Dimensions,
     TouchableOpacity,
 } from 'react-native';
 import { memo } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { CustomSwitch } from '../../components/CustomSwitch';
 import { useLogStore } from '../../store/useLogStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useRouter } from 'expo-router';
@@ -341,11 +342,6 @@ export default function ProfileScreen() {
                 contentContainerStyle={{ paddingBottom: 100 }}
                 automaticallyAdjustKeyboardInsets={true}
             >
-                {/* Analytics & Trends */}
-                <Animated.View entering={FadeInDown.delay(50).duration(600)}>
-                    <AnalyticsSection isDark={isDark} />
-                </Animated.View>
-
                 {/* Account Section */}
                 <Animated.View entering={FadeInDown.delay(100).duration(600)}>
                     <View className="bg-card dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)] items-center">
@@ -438,11 +434,9 @@ export default function ProfileScreen() {
                                 }
                                 <Text className="text-base font-semibold text-text dark:text-zinc-50">Dunkelmodus</Text>
                             </View>
-                            <Switch
+                            <CustomSwitch
                                 value={isDark}
                                 onValueChange={handleToggleDark}
-                                trackColor={{ false: '#E5E7EB', true: '#2563EB' }}
-                                thumbColor={'#FFFFFF'}
                             />
                         </View>
 
@@ -592,7 +586,7 @@ export default function ProfileScreen() {
                         <View className="mt-4 bg-blue-50 dark:bg-zinc-800/30 p-4 rounded-2xl flex-row items-start gap-x-3">
                             <Info size={18} color="#3B82F6" className="mt-0.5" />
                             <Text className="flex-1 text-xs text-blue-700 dark:text-blue-300 leading-4">
-                                Nutze "Auto-Berechnen", um wissenschaftlich fundierte Ziele basierend auf deiner Biometrie zu erhalten.
+                                Nutze "Auto-Berechnen", um wissenschaftlich fundierte Ziele basierend auf deinen Biometrieangaben zu erhalten.
                             </Text>
                         </View>
                     </View>
@@ -615,6 +609,11 @@ export default function ProfileScreen() {
                             />
                         </View>
                     </View>
+                </Animated.View>
+
+                {/* Analytics & Trends */}
+                <Animated.View entering={FadeInDown.delay(550).duration(600)}>
+                    <AnalyticsSection isDark={isDark} />
                 </Animated.View>
             </ScrollView>
         </SafeAreaView>

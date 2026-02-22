@@ -69,6 +69,7 @@ export type Recipe = {
     totalCarbs: number;
     totalFat: number;
     notes?: string;
+    is_public?: boolean;
 };
 
 export type HistoryEntry = {
@@ -202,6 +203,7 @@ export const useLogStore = create<LogState>()(
                     totalProtein: Math.round(totals.protein),
                     totalCarbs: Math.round(totals.carbs),
                     totalFat: Math.round(totals.fat),
+                    is_public: recipeData.is_public || false
                 };
                 return { recipes: [...state.recipes, newRecipe] };
             }),

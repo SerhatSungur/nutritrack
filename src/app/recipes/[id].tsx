@@ -1,7 +1,8 @@
 import { View, Text, ScrollView, TextInput, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useLogStore } from '../../store/useLogStore';
-import { ChevronLeft, PlusCircle, Edit2 } from 'lucide-react-native';
+import { ChevronLeft, PlusCircle, Edit2, Trash2 } from 'lucide-react-native';
+import { Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'nativewind';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -58,15 +59,57 @@ const RecipeDetailScreen = () => {
                     </View>
                     <Text style={{ fontSize: 22, fontWeight: '800', color: isDark ? '#FAFAFA' : '#09090B' }} className="flex-1" numberOfLines={1}>{recipe.name}</Text>
                 </View>
-                <View
-                    onStartShouldSetResponder={() => true}
-                    onResponderRelease={() => {
-                        haptics.lightImpact();
-                        router.push(`/recipes/create?editId=${recipe.id}`);
-                    }}
-                    className="p-2 bg-primary/10 rounded-full"
-                >
-                    <Edit2 size={20} color="#2563EB" />
+                <View className="flex-row items-center gap-x-2">
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => {
+                            haptics.lightImpact();
+                            router.push(`/recipes/create?editId=${recipe.id}`);
+                        }}
+                        style={{
+                            width: 44,
+                            height: 44,
+                            backgroundColor: isDark ? '#27272A' : '#EBF2FF',
+                            borderRadius: 14,
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        <Edit2 size={20} color="#2563EB" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => {
+                            haptics.warning();
+                            Alert.alert(
+                                "Rezept löschen",
+                                "Möchtest du dieses Rezept wirklich dauerhaft löschen?",
+                                [
+                                    { text: "Abbrechen", style: "cancel" },
+                                    {
+                                        text: "Löschen",
+                                        style: "destructive",
+                                        onPress: () => {
+                                            const { deleteRecipe } = useLogStore.getState();
+                                            deleteRecipe(recipe.id);
+                                            router.back();
+                                        }
+                                    }
+                                ]
+                            );
+                        }}
+                        style={{
+                            width: 44,
+                            height: 44,
+                            backgroundColor: isDark ? '#27272A' : '#FEE2E2',
+                            borderRadius: 14,
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        <Trash2 size={20} color="#EF4444" />
+                    </TouchableOpacity>
                 </View>
             </View>
 
