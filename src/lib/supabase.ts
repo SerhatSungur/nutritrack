@@ -1,5 +1,5 @@
 import 'react-native-url-polyfill/auto';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { createClient } from '@supabase/supabase-js';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -15,7 +15,7 @@ export const supabase = (supabaseUrl && supabaseAnonKey)
             storage: AsyncStorage,
             autoRefreshToken: true,
             persistSession: true,
-            detectSessionInUrl: false,
+            detectSessionInUrl: Platform.OS === 'web',
         },
     })
     : {
