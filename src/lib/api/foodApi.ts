@@ -49,7 +49,7 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout 
 export async function searchFood(query: string): Promise<FoodItem[]> {
     if (!query || query.length < 2) return [];
     try {
-        const url = `https://de.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20&fields=id,code,product_name,brands,nutriments,quantity,serving_size,serving_quantity`;
+        const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20&fields=id,code,product_name,brands,nutriments,quantity,serving_size,serving_quantity`;
         const response = await fetchWithTimeout(url, {
             headers: { 'User-Agent': 'NutriTrack - iOS - Version 1.0 - https://github.com/serhatsungur/nutritrack' }
         });

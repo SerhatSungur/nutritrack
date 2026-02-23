@@ -5,6 +5,15 @@ import type { UserProfile } from '../lib/nutritionUtils';
 
 const isSameDayString = (d1: string, d2: string) => d1 === d2;
 
+// Lightweight UUID v4 generator to bypass NPM permission issues locally
+export function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
 // Defensive storage wrapper to prevent bundling errors if AsyncStorage is missing
 const getDefensiveStorage = (): StateStorage => {
     try {
@@ -128,10 +137,7 @@ export const useLogStore = create<LogState>()(
     persist(
         (set, get) => ({
             currentDate: new Date(),
-            logs: [
-                { id: '1', meal_type: 'breakfast', name: 'Oatmeal & Berries', calories: 320, protein: 12, carbs: 45, fat: 6, date: new Date().toISOString().split('T')[0] },
-                { id: '2', meal_type: 'lunch', name: 'Chicken Salad', calories: 450, protein: 35, carbs: 12, fat: 18, date: new Date().toISOString().split('T')[0] }
-            ],
+            logs: [],
             recipes: [],
             macroGoals: { calories: 2400, protein: 150, carbs: 250, fat: 80 },
             userProfile: {
@@ -178,7 +184,7 @@ export const useLogStore = create<LogState>()(
             addLog: (log) => set((state) => {
                 const logDate = log.date || state.currentDate.toISOString().split('T')[0];
                 return {
-                    logs: [...state.logs, { ...log, id: Math.random().toString(), date: logDate }]
+                    logs: [...state.logs, { ...log, id: generateUUID(), date: logDate }]
                 };
             }),
 
@@ -198,7 +204,7 @@ export const useLogStore = create<LogState>()(
                 );
                 const newRecipe: Recipe = {
                     ...recipeData,
-                    id: Math.random().toString(),
+                    id: generateUUID(),
                     totalCalories: Math.round(totals.calories),
                     totalProtein: Math.round(totals.protein),
                     totalCarbs: Math.round(totals.carbs),
@@ -315,6 +321,7 @@ useLogStore.subscribe((state, prevState) => {
         state.userProfile !== prevState.userProfile ||
         state.macroGoals !== prevState.macroGoals ||
         state.waterGoal !== prevState.waterGoal ||
+        state.waterIntake !== prevState.waterIntake ||
         state.logs.length !== prevState.logs.length ||
         state.recipes.length !== prevState.recipes.length;
 

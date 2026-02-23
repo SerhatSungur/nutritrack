@@ -35,6 +35,7 @@ export const syncService = {
             // or just push matching IDs.
             for (const log of logs) {
                 await supabase.from('daily_logs').upsert({
+                    id: log.id,
                     user_id: user.id,
                     name: log.name,
                     meal_type: log.meal_type,
@@ -49,6 +50,7 @@ export const syncService = {
             // 3. Sync Recipes
             for (const recipe of recipes) {
                 await supabase.from('recipes').upsert({
+                    id: recipe.id,
                     user_id: user.id,
                     name: recipe.name,
                     ingredients: recipe.ingredients,
@@ -110,7 +112,7 @@ export const syncService = {
             if (logs) {
                 // Update store logs (simple merge)
                 // This is a naive implementation; production would need better conflict resolution.
-                const formattedLogs = logs.map(l => ({
+                const formattedLogs = logs.map((l: any) => ({
                     id: l.id,
                     meal_type: l.meal_type,
                     name: l.name,
@@ -131,7 +133,7 @@ export const syncService = {
                 .eq('user_id', user.id);
 
             if (recipes) {
-                const formattedRecipes = recipes.map(r => ({
+                const formattedRecipes = recipes.map((r: any) => ({
                     id: r.id,
                     name: r.name,
                     ingredients: r.ingredients,
@@ -165,7 +167,7 @@ export const syncService = {
 
             if (error) throw error;
 
-            return data.map(r => ({
+            return data.map((r: any) => ({
                 id: r.id,
                 name: r.name,
                 ingredients: r.ingredients,
