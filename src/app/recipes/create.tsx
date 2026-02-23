@@ -1,4 +1,4 @@
-import { View, Text, TextInput, ScrollView, ActivityIndicator, useWindowDimensions, Pressable, Platform } from 'react-native';
+import { View, Text, TextInput, ScrollView, ActivityIndicator, useWindowDimensions, Pressable, Platform, Keyboard } from 'react-native';
 import { CustomSwitch } from '../../components/CustomSwitch';
 import { useColorScheme } from 'nativewind';
 import { useState, useEffect } from 'react';
@@ -140,12 +140,15 @@ export default function CreateRecipeScreen() {
 
     const handleSearch = async () => {
         if (!searchQuery) return;
+        Keyboard.dismiss();
         setLoading(true);
         try {
             const results = await searchFood(searchQuery);
             setSearchResults(results);
         } catch (e) {
             console.error('Search error:', e);
+            // On web, CORS errors might throw here. 
+            // In a real app we'd show an alert, but for now we just log it.
         } finally {
             setLoading(false);
         }
@@ -186,14 +189,14 @@ export default function CreateRecipeScreen() {
                 style={isDesktop ? { width: 500, height: '100%', borderLeftWidth: 1, borderLeftColor: isDark ? '#27272A' : '#E5E7EB' } : {}}
             >
                 <View style={{
-                    height: 70,
+                    height: 80,
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    paddingHorizontal: 20,
+                    paddingHorizontal: isDesktop ? 32 : 20,
                     backgroundColor: isDark ? '#18181B' : '#FFFFFF',
                     borderBottomWidth: 1,
-                    borderBottomColor: isDark ? '#27272A' : '#F3F4F6'
+                    borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
                 }}>
                     <View className="flex-row items-center flex-1 pr-4">
                         <View
@@ -226,11 +229,11 @@ export default function CreateRecipeScreen() {
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                     automaticallyAdjustKeyboardInsets={true}
-                    contentContainerStyle={{ paddingBottom: 100 }}
+                    contentContainerStyle={{ paddingHorizontal: isDesktop ? 32 : 16, paddingVertical: 24, paddingBottom: 100 }}
                 >
                     {/* Basic Info */}
-                    <Animated.View entering={FadeInDown.delay(100).springify()} className="bg-card dark:bg-zinc-900 p-4 rounded-2xl mb-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-                        <Text className="text-sm font-semibold text-textLight dark:text-zinc-400 mb-2 uppercase tracking-wider">Rezeptname</Text>
+                    <Animated.View entering={FadeInDown.delay(100).springify()} className="bg-white dark:bg-zinc-900/60 p-6 rounded-3xl mb-6 shadow-sm border border-gray-100 dark:border-white/5">
+                        <Text className="text-xs font-bold text-textLight dark:text-zinc-500 mb-3 uppercase tracking-[2px]">Rezeptname</Text>
                         <TextInput
                             value={name}
                             onChangeText={setName}
@@ -258,8 +261,8 @@ export default function CreateRecipeScreen() {
 
                     {/* Current Ingredients */}
                     {ingredients.length > 0 && (
-                        <Animated.View entering={FadeInDown.delay(150).springify()} className="bg-card dark:bg-zinc-900 p-4 rounded-2xl mb-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-                            <Text className="text-sm font-semibold text-textLight dark:text-zinc-400 mb-3 uppercase tracking-wider">Zutaten</Text>
+                        <Animated.View entering={FadeInDown.delay(150).springify()} className="bg-white dark:bg-zinc-900/60 p-6 rounded-3xl mb-6 shadow-sm border border-gray-100 dark:border-white/5">
+                            <Text className="text-xs font-bold text-textLight dark:text-zinc-500 mb-4 uppercase tracking-[2px]">Zutaten ({ingredients.length})</Text>
                             {ingredients.map((ing) => (
                                 <View key={ing.id} className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-zinc-800 last:border-0">
                                     <View className="flex-1 mr-4">
@@ -291,35 +294,38 @@ export default function CreateRecipeScreen() {
                     )}
 
                     {/* Search */}
-                    <Animated.View entering={FadeInDown.delay(200).springify()} className="bg-card dark:bg-zinc-900 p-4 rounded-2xl mb-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-                        <Text className="text-sm font-semibold text-textLight dark:text-zinc-400 mb-3 uppercase tracking-wider">Zutat hinzufügen</Text>
-                        <View className="flex-row items-center border border-gray-200 dark:border-zinc-700 rounded-xl bg-gray-50 dark:bg-zinc-800 mb-3 overflow-hidden pl-3">
-                            <Search size={20} color="#9CA3AF" />
-                            <TextInput
-                                value={searchQuery}
-                                onChangeText={setSearchQuery}
-                                onSubmitEditing={handleSearch}
-                                placeholder="Suchen nach Lebensmitteln..."
-                                className="flex-1 py-3 ml-2 text-base text-text dark:text-zinc-50 outline-none"
-                                placeholderTextColor="#9CA3AF"
-                                autoCapitalize="none"
-                                returnKeyType="search"
-                            />
+                    <Animated.View entering={FadeInDown.delay(200).springify()} className="bg-white dark:bg-zinc-900/60 p-6 rounded-3xl mb-6 shadow-sm border border-gray-100 dark:border-white/5">
+                        <Text className="text-xs font-bold text-textLight dark:text-zinc-500 mb-4 uppercase tracking-[2px]">Neues Lebensmittel suchen</Text>
+                        <View className="flex-row items-center justify-between mb-4 gap-x-2">
+                            <View className="flex-1 flex-row items-center border border-gray-200 dark:border-zinc-800 rounded-2xl bg-gray-50/50 dark:bg-zinc-900 px-4 py-1">
+                                <Search size={20} color="#9CA3AF" />
+                                <TextInput
+                                    value={searchQuery}
+                                    onChangeText={setSearchQuery}
+                                    onSubmitEditing={handleSearch}
+                                    placeholder="Z.B. Apfel, Haferflocken..."
+                                    className="flex-1 py-3.5 ml-3 text-base font-medium text-text dark:text-zinc-50 outline-none"
+                                    placeholderTextColor="#A1A1AA"
+                                    autoCapitalize="none"
+                                    returnKeyType="search"
+                                />
+                                <View
+                                    onStartShouldSetResponder={() => true}
+                                    onResponderRelease={() => router.push('/scanner')}
+                                    className="p-2 bg-blue-50 dark:bg-blue-500/10 rounded-xl"
+                                    style={Platform.OS === 'web' ? { cursor: 'pointer' } as any : undefined}
+                                >
+                                    <ScanLine size={18} color="#2563EB" />
+                                </View>
+                            </View>
+
                             <View
                                 onStartShouldSetResponder={() => true}
                                 onResponderRelease={() => handleSearch()}
-                                className="bg-primary px-4 py-3 h-full justify-center items-center ml-1"
+                                className="bg-primary px-5 py-4 rounded-2xl justify-center items-center shadow-sm shadow-blue-500/20"
                                 style={Platform.OS === 'web' ? { cursor: 'pointer' } as any : undefined}
                             >
-                                <Text className="text-white font-bold text-sm uppercase tracking-widest">Suchen</Text>
-                            </View>
-                            <View
-                                onStartShouldSetResponder={() => true}
-                                onResponderRelease={() => router.push('/scanner')}
-                                className="p-3 bg-primary/10"
-                                style={Platform.OS === 'web' ? { cursor: 'pointer' } as any : undefined}
-                            >
-                                <ScanLine size={18} color="#2563EB" />
+                                <Text className="text-white font-bold text-sm tracking-wide">Suchen</Text>
                             </View>
                         </View>
 
@@ -442,9 +448,10 @@ export default function CreateRecipeScreen() {
                                 haptics.success();
                                 handleSaveRecipe();
                             }}
-                            className={`py-4 rounded-xl items-center mb-8 ${(!name || ingredients.length === 0) ? 'bg-blue-300' : 'bg-primary'}`}
+                            className={`py-[18px] rounded-2xl items-center mb-12 shadow-md ${(!name || ingredients.length === 0) ? 'bg-blue-300 shadow-transparent' : 'bg-primary shadow-blue-500/30'}`}
+                            style={Platform.OS === 'web' ? { cursor: (!name || ingredients.length === 0) ? 'default' : 'pointer' } as any : undefined}
                         >
-                            <Text className="text-white font-bold text-lg">{editId ? 'Änderungen speichern' : 'Rezept speichern'}</Text>
+                            <Text className="text-white font-extrabold text-[17px]">{editId ? 'Änderungen speichern' : 'Rezept speichern'}</Text>
                         </View>
                     </Animated.View>
                 </ScrollView>
