@@ -23,6 +23,11 @@ export default function Root({ children }: PropsWithChildren) {
                 <script src="https://accounts.google.com/gsi/client" async defer></script>
                 <script dangerouslySetInnerHTML={{
                     __html: `
+                    // Global polyfill for process.env to prevent ReferenceErrors on Web (Vercel & Local)
+                    window.process = window.process || {};
+                    window.process.env = window.process.env || {};
+                    window.process.env.NODE_ENV = window.process.env.NODE_ENV || 'development';
+
                     window.addEventListener('error', function(event) {
                         const div = document.createElement('div');
                         div.style.cssText = 'position:fixed;top:0;left:0;right:0;background:red;color:white;z-index:9999;padding:20px;font-size:16px;overflow:auto;max-height:100vh;';

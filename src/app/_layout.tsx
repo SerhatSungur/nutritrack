@@ -1,4 +1,4 @@
-console.log("HELLO FROM APP ENTRY POINT - EVALUATION STARTED");
+
 
 import { Stack } from "expo-router";
 export { ErrorBoundary } from "expo-router";

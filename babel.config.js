@@ -1,3 +1,50 @@
+const envVarTransformer = function (api) {
+    const { types: t } = api;
+    return {
+        name: "transform-env-vars-v2",
+        visitor: {
+            MemberExpression(path) {
+                // Handle process.env.XYZ
+                if (path.get("object").matchesPattern("process.env")) {
+                    const key = path.toComputedKey();
+                    if (t.isStringLiteral(key)) {
+                        const name = key.value;
+                        const val = process.env[name] || (name === 'NODE_ENV' ? 'development' : '');
+                        path.replaceWith(t.stringLiteral(val));
+                    }
+                }
+                // Handle import.meta.env
+                if (path.get("object").matchesPattern("import.meta.env")) {
+                    const key = path.toComputedKey();
+                    if (t.isStringLiteral(key)) {
+                        const name = key.value;
+                        const val = process.env[name] || (name === 'MODE' ? 'development' : '');
+                        path.replaceWith(t.stringLiteral(val));
+                    } else {
+                        path.replaceWith(t.objectExpression([
+                            t.objectProperty(t.identifier("MODE"), t.stringLiteral(process.env.NODE_ENV || "development")),
+                            t.objectProperty(t.identifier("PROD"), t.booleanLiteral(process.env.NODE_ENV === 'production')),
+                            t.objectProperty(t.identifier("DEV"), t.booleanLiteral(process.env.NODE_ENV !== 'production')),
+                        ]));
+                    }
+                }
+            },
+            MetaProperty(path) {
+                if (path.get("meta").isIdentifier({ name: "import" }) &&
+                    path.get("property").isIdentifier({ name: "meta" })) {
+                    path.replaceWith(t.objectExpression([
+                        t.objectProperty(t.identifier("env"), t.objectExpression([
+                            t.objectProperty(t.identifier("MODE"), t.stringLiteral(process.env.NODE_ENV || "development")),
+                            t.objectProperty(t.identifier("PROD"), t.booleanLiteral(process.env.NODE_ENV === 'production')),
+                            t.objectProperty(t.identifier("DEV"), t.booleanLiteral(process.env.NODE_ENV !== 'production')),
+                        ]))
+                    ]));
+                }
+            }
+        }
+    };
+};
+
 module.exports = function (api) {
     api.cache(true);
     return {
@@ -6,35 +53,14 @@ module.exports = function (api) {
             "nativewind/babel",
         ],
         plugins: [
-            // Next.js/Vercel often ships without a process.env polyfill on the client in strict edge environments.
-            // React Native libraries (and Reanimated) expect process.env.NODE_ENV to exist.
-            // This custom AST plugin statically string-replaces process.env variables to prevent fatal ReferenceErrors during Vercel builds.
-            function (api) {
-                const { types: t } = api;
-                return {
-                    name: "inline-env-vars",
-                    visitor: {
-                        MemberExpression(path) {
-                            if (path.get("object").matchesPattern("process.env")) {
-                                const key = path.toComputedKey();
-                                if (t.isStringLiteral(key)) {
-                                    const name = key.value;
-                                    if (name === "NODE_ENV") {
-                                        path.replaceWith(t.stringLiteral(process.env.NODE_ENV || "production"));
-                                    } else if (name === "EXPO_PUBLIC_SUPABASE_URL") {
-                                        path.replaceWith(t.stringLiteral(process.env.EXPO_PUBLIC_SUPABASE_URL || ""));
-                                    } else if (name === "EXPO_PUBLIC_SUPABASE_ANON_KEY") {
-                                        path.replaceWith(t.stringLiteral(process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || ""));
-                                    } else if (name === "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID") {
-                                        path.replaceWith(t.stringLiteral(process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || ""));
-                                    }
-                                }
-                            }
-                        }
-                    }
-                };
-            },
+            envVarTransformer,
             "react-native-reanimated/plugin"
         ],
+        overrides: [
+            {
+                test: /[/\\]node_modules[/\\]/,
+                plugins: [envVarTransformer]
+            }
+        ]
     };
 };
