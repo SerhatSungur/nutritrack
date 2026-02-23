@@ -51,6 +51,7 @@
     "@babel/core": "^7.29.0",
     "@types/lodash": "^4.17.23",
     "@types/react": "~19.1.0",
+    "babel-plugin-transform-inline-environment-variables": "^6.9.0",
     "babel-preset-expo": "^54.0.10",
     "expo-constants": "^18.0.13",
     "expo-linking": "^8.0.11",
