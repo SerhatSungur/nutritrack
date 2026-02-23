@@ -9,13 +9,21 @@ import { format, isToday, isTomorrow, isYesterday, addDays, subDays, isSameDay }
 import { de } from 'date-fns/locale';
 import { useState, useRef, useEffect, memo } from 'react';
 import { haptics } from '../../lib/haptics';
+import { RecipeSkeleton } from '../../components/RecipeSkeleton';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const STATIC_TODAY = new Date();
 const STATIC_WEEK_DATES = Array.from({ length: 31 }).map((_, i) => addDays(subDays(STATIC_TODAY, 15), i));
 
 const SegmentedControl = memo(({ options, value, onChange, isDark }: { options: { label: string; value: any }[]; value: any; onChange: (val: any) => void; isDark: boolean; }) => (
-    <View className="flex-row bg-gray-100 dark:bg-zinc-800 p-1 rounded-xl">
+    <View style={{
+        flexDirection: 'row',
+        backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
+        padding: 4,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+    }}>
         {options.map((opt) => {
             const isSelected = value === opt.value;
             return (
@@ -24,13 +32,28 @@ const SegmentedControl = memo(({ options, value, onChange, isDark }: { options: 
                     activeOpacity={0.7}
                     onPress={() => { haptics.selection(); onChange(opt.value); }}
                     style={{
-                        flex: 1, paddingVertical: 8, borderRadius: 10, alignItems: 'center',
-                        backgroundColor: isSelected ? (isDark ? '#3F3F46' : '#FFFFFF') : 'transparent',
-                        shadowColor: isSelected ? '#000' : 'transparent',
-                        shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: isSelected ? 1 : 0
+                        flex: 1,
+                        paddingVertical: 10,
+                        borderRadius: 16,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: isSelected ? '#2563EB' : 'transparent',
+                        shadowColor: isSelected ? '#2563EB' : 'transparent',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 8,
+                        elevation: isSelected ? 4 : 0
                     }}
                 >
-                    <Text style={{ fontSize: 13, fontWeight: isSelected ? '700' : '600', color: isSelected ? '#2563EB' : (isDark ? '#71717A' : '#6B7280') }}>{opt.label}</Text>
+                    <Text style={{
+                        fontSize: 12,
+                        fontWeight: '800',
+                        color: isSelected ? '#FFFFFF' : (isDark ? '#94A3B8' : '#64748B'),
+                        textTransform: 'uppercase',
+                        letterSpacing: 1
+                    }}>
+                        {opt.label}
+                    </Text>
                 </TouchableOpacity>
             );
         })}
@@ -173,13 +196,26 @@ export default function RecipesScreen() {
                 justifyContent: 'space-between',
                 alignItems: 'center'
             }}>
-                <Text style={{
-                    fontSize: 28,
-                    fontFamily: 'PlusJakartaSans_800ExtraBold',
-                    color: isDark ? '#FAFAFA' : '#09090B'
-                }}>
-                    Meine Rezepte
-                </Text>
+                <View>
+                    <Text style={{
+                        fontSize: 12,
+                        fontWeight: '800',
+                        color: isDark ? '#94A3B8' : '#64748B',
+                        letterSpacing: 2,
+                        textTransform: 'uppercase',
+                        marginBottom: 4
+                    }}>
+                        Bibliothek
+                    </Text>
+                    <Text style={{
+                        fontSize: 34,
+                        fontFamily: 'PlusJakartaSans_800ExtraBold',
+                        color: isDark ? '#F8FAFC' : '#0F172A',
+                        letterSpacing: -1
+                    }}>
+                        Rezepte
+                    </Text>
+                </View>
                 <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => {
@@ -212,12 +248,12 @@ export default function RecipesScreen() {
                     />
                 </View>
 
-                <View className="flex-row items-center bg-gray-50 dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-2xl px-4 py-2">
-                    <Search size={18} color={isDark ? '#71717A' : '#9CA3AF'} />
+                <View className="flex-row items-center bg-white/50 dark:bg-zinc-900/50 border border-gray-100 dark:border-white/5 rounded-2xl px-4 py-3 shadow-sm">
+                    <Search size={18} color={isDark ? '#94A3B8' : '#64748B'} />
                     <TextInput
-                        placeholder={viewType === 'mine' ? "Meine Rezepte durchsuchen..." : "Community-Rezepte finden..."}
-                        placeholderTextColor={isDark ? '#52525B' : '#9CA3AF'}
-                        className="flex-1 ml-3 text-base text-text dark:text-zinc-50"
+                        placeholder={viewType === 'mine' ? "Rezepte durchsuchen..." : "Community entdecken..."}
+                        placeholderTextColor={isDark ? '#475569' : '#94A3B8'}
+                        className="flex-1 ml-3 text-base text-text dark:text-zinc-50 font-medium"
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                     />
@@ -232,10 +268,7 @@ export default function RecipesScreen() {
             >
                 <View className="px-5 pt-4">
                     {isLoadingCommunity && viewType === 'discover' ? (
-                        <View className="py-20 items-center">
-                            <ActivityIndicator size="large" color="#2563EB" />
-                            <Text className="text-textLight dark:text-zinc-400 mt-4 font-medium italic">Inspiration wird geladen...</Text>
-                        </View>
+                        <RecipeSkeleton isDark={isDark} />
                     ) : activeRecipes.length > 0 ? (
                         activeRecipes.map((recipe, index) => (
                             <Animated.View
@@ -246,7 +279,7 @@ export default function RecipesScreen() {
                                 <TouchableOpacity
                                     activeOpacity={0.9}
                                     onPress={() => router.push(`/recipes/${recipe.id}`)}
-                                    className="bg-white dark:bg-zinc-900 rounded-[24px] p-5 shadow-sm border border-gray-100 dark:border-white/5"
+                                    className="bg-white dark:bg-zinc-900 rounded-[32px] p-6 shadow-sm border border-gray-100 dark:border-white/5 shadow-premium"
                                 >
                                     <View className="flex-row justify-between items-start mb-4">
                                         <View className="flex-1 pr-2">

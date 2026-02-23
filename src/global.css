@@ -4,18 +4,36 @@
 
 @layer base {
     :root {
-        --background: #F4F4F5;
+        --background: #F8FAFC;
         --card: #FFFFFF;
         --primary: #2563EB;
-        --text: #09090B;
-        --textLight: #71717A;
+        --text: #0F172A;
+        --textLight: #64748B;
+        --border: #E2E8F0;
+        --ring: #3B82F6;
     }
 
     .dark {
-        --background: #09090B;
-        --card: #18181B;
+        --background: #020617;
+        --card: #0F172A;
         --primary: #3B82F6;
-        --text: #FAFAFA;
-        --textLight: #A1A1AA;
+        --text: #F8FAFC;
+        --textLight: #94A3B8;
+        --border: #1E293B;
+        --ring: #60A5FA;
+    }
+}
+
+/* Custom Utilities for Premium Look */
+@layer utilities {
+    .glass {
+        @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-white/20 dark:border-white/5;
+    }
+    .shadow-premium {
+        shadow-color: rgba(0, 0, 0, 0.05);
+        shadow-offset: 0px 4px;
+        shadow-opacity: 1;
+        shadow-radius: 12px;
+        elevation: 4;
     }
 }

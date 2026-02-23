@@ -13,7 +13,7 @@ export default function TabLayout() {
     const isDesktop = width >= 768;
 
     return (
-        <View style={{ flex: 1, flexDirection: isDesktop ? 'row' : 'column', backgroundColor: isDark ? '#09090B' : '#F4F4F5' }}>
+        <View style={{ flex: 1, flexDirection: isDesktop ? 'row' : 'column', backgroundColor: 'var(--background)' }}>
             {/* Inject our sleek Desktop Sidebar on wide screens */}
             {isDesktop && <DesktopSidebar />}
 

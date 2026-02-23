@@ -12,6 +12,8 @@ import { Plus, Droplets, BookOpen, ChevronRight, X, Scale, Info, Check, Activity
 import { useRouter } from 'expo-router';
 import { haptics } from '../../lib/haptics';
 import { useRef, useEffect, useState, useCallback, memo } from 'react';
+import { useAuthStore } from '../../store/useAuthStore';
+import { DashboardSkeleton } from '../../components/DashboardSkeleton';
 import Animated, {
     FadeInDown, FadeIn,
     useSharedValue, withTiming, useAnimatedProps, Easing,
@@ -45,14 +47,13 @@ const MacroRing = memo(({ value, goal, color, size = 72, strokeWidth = 7, label,
 
     useEffect(() => {
         progress.value = 0;
-        ringScale.value = withTiming(1, { duration: 800, easing: Easing.bezier(0.33, 1, 0.68, 1) });
+        ringScale.value = withTiming(1, { duration: 1000, easing: Easing.bezier(0.33, 1, 0.68, 1) });
         progress.value = withTiming(Math.min(value / Math.max(goal, 1), 1), {
-            duration: 1200, easing: Easing.bezier(0.33, 1, 0.68, 1),
+            duration: 1500, easing: Easing.bezier(0.33, 1, 0.68, 1),
         });
-        pulseScale.value = withSequence(
-            withTiming(1.12, { duration: 150, easing: Easing.out(Easing.quad) }),
-            withTiming(1, { duration: 300, easing: Easing.bezier(0.33, 1, 0.68, 1) })
-        );
+        pulseScale.value = withTiming(1.05, { duration: 150 }, () => {
+            pulseScale.value = withTiming(1, { duration: 300 });
+        });
     }, [value, goal]);
 
     const animatedProps = useAnimatedProps(() => ({
@@ -105,14 +106,13 @@ const CalorieRing = memo(({ consumed, goal, isDark }: { consumed: number; goal: 
 
     useEffect(() => {
         progress.value = 0;
-        ringScale.value = withTiming(1, { duration: 1000, easing: Easing.bezier(0.33, 1, 0.68, 1) });
+        ringScale.value = withTiming(1, { duration: 1200, easing: Easing.bezier(0.33, 1, 0.68, 1) });
         progress.value = withTiming(Math.min(consumed / Math.max(goal, 1), 1), {
-            duration: 1500, easing: Easing.bezier(0.33, 1, 0.68, 1),
+            duration: 2000, easing: Easing.bezier(0.33, 1, 0.68, 1),
         });
-        pulseScale.value = withSequence(
-            withTiming(1.08, { duration: 150, easing: Easing.out(Easing.quad) }),
-            withTiming(1, { duration: 300, easing: Easing.bezier(0.33, 1, 0.68, 1) })
-        );
+        pulseScale.value = withTiming(1.04, { duration: 200 }, () => {
+            pulseScale.value = withTiming(1, { duration: 400 });
+        });
     }, [consumed, goal]);
 
     const animatedProps = useAnimatedProps(() => ({
@@ -246,7 +246,7 @@ function WaterCard({ isDark, date }: { isDark: boolean, date: string }) {
 }
 
 // ─── Meal Section ─────────────────────────────────────────────────────────────
-const MealSection = ({ title, type, onAddPress }: { title: string; type: MealType; onAddPress: (meal: MealType) => void }) => {
+const MealSection = ({ title, type, onAddPress, delay = 0 }: { title: string; type: MealType; onAddPress: (meal: MealType) => void; delay?: number }) => {
     const allLogs = useLogStore((state) => state.logs);
     const currentDate = useLogStore((state) => state.currentDate);
     const logs = allLogs.filter(l =>
@@ -255,40 +255,42 @@ const MealSection = ({ title, type, onAddPress }: { title: string; type: MealTyp
     const sectionCalories = logs.reduce((sum, log) => sum + log.calories, 0);
 
     return (
-        <View className="bg-white dark:bg-zinc-900 rounded-2xl p-5 mb-4 shadow-sm border border-gray-100 dark:border-white/5">
-            <View className="flex-row justify-between items-center mb-4">
-                <Text className="text-lg font-bold text-text dark:text-zinc-50">{title}</Text>
-                <Text className="text-lg font-bold text-primary">{sectionCalories} kcal</Text>
-            </View>
+        <Animated.View entering={FadeInDown.delay(delay).duration(800)}>
+            <View className="bg-white dark:bg-zinc-900 rounded-[32px] p-6 mb-4 shadow-sm border border-gray-100 dark:border-white/5 shadow-premium">
+                <View className="flex-row justify-between items-center mb-5">
+                    <Text className="text-xl font-bold text-text dark:text-zinc-50">{title}</Text>
+                    <Text className="text-xl font-black text-primary">{sectionCalories} kcal</Text>
+                </View>
 
-            {logs.length > 0 ? (
-                logs.map((log) => (
-                    <View key={log.id} className="flex-row justify-between py-2 border-b border-gray-100 dark:border-zinc-800 last:border-0">
-                        <View>
-                            <Text className="text-base font-medium text-text dark:text-zinc-50">{log.name}</Text>
-                            <Text className="text-sm text-textLight dark:text-zinc-400">
-                                PROT: {log.protein}g · KH: {log.carbs}g · FETT: {log.fat}g
-                            </Text>
+                {logs.length > 0 ? (
+                    logs.map((log) => (
+                        <View key={log.id} className="flex-row justify-between py-3 border-b border-gray-100 dark:border-zinc-800 last:border-0 items-center">
+                            <View>
+                                <Text className="text-[17px] font-bold text-text dark:text-zinc-50 mb-0.5">{log.name}</Text>
+                                <Text className="text-xs font-semibold text-textLight dark:text-zinc-500 uppercase tracking-wider">
+                                    P: {log.protein}g · K: {log.carbs}g · F: {log.fat}g
+                                </Text>
+                            </View>
+                            <Text className="font-black text-text dark:text-zinc-50 text-base">{log.calories}</Text>
                         </View>
-                        <Text className="font-semibold text-text dark:text-zinc-50">{log.calories}</Text>
-                    </View>
-                ))
-            ) : (
-                <Text className="text-textLight dark:text-zinc-400 italic py-2">Noch keine Lebensmittel erfasst.</Text>
-            )}
+                    ))
+                ) : (
+                    <Text className="text-textLight dark:text-zinc-500 italic py-4 opacity-70">Noch keine Lebensmittel erfasst.</Text>
+                )}
 
-            <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => {
-                    haptics.lightImpact();
-                    onAddPress(type);
-                }}
-                className="flex-row items-center justify-center mt-3 p-3 bg-blue-50/50 dark:bg-blue-500/10 rounded-xl"
-            >
-                <Plus size={18} color="#2563EB" />
-                <Text className="ml-2 font-bold text-primary text-sm">Rezept hinzufügen</Text>
-            </TouchableOpacity>
-        </View>
+                <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => {
+                        haptics.lightImpact();
+                        onAddPress(type);
+                    }}
+                    className="flex-row items-center justify-center mt-4 py-4 bg-blue-50/50 dark:bg-blue-500/10 rounded-2xl border border-blue-100 dark:border-blue-900/20"
+                >
+                    <Plus size={18} color="#2563EB" />
+                    <Text className="ml-2 font-bold text-primary text-sm uppercase tracking-widest">Hinzufügen</Text>
+                </TouchableOpacity>
+            </View>
+        </Animated.View>
     );
 };
 
@@ -484,6 +486,15 @@ export default function DashboardScreen() {
     const router = useRouter();
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === 'dark';
+    const { initialized: authInitialized } = useAuthStore();
+    const [skeletonVisible, setSkeletonVisible] = useState(!authInitialized);
+
+    useEffect(() => {
+        if (authInitialized) {
+            const timer = setTimeout(() => setSkeletonVisible(false), 800);
+            return () => clearTimeout(timer);
+        }
+    }, [authInitialized]);
 
     const [pickerMeal, setPickerMeal] = useState<MealType | null>(null);
     const pickerVisible = pickerMeal !== null;
@@ -544,29 +555,46 @@ export default function DashboardScreen() {
         opacity: interpolate(scrollY.value, [150, 240], [1, 0]),
     }));
 
-    const cardBg = isDark ? '#18181B' : '#FFFFFF';
-    const pageBg = isDark ? '#09090B' : '#F8FAFC'; // Slate-50 for light mode depth
-    const textPrimary = isDark ? '#FAFAFA' : '#09090B';
-    const textSecondary = isDark ? '#A1A1AA' : '#64748B';
+    const cardBg = isDark ? '#0F172A' : '#FFFFFF';
+    const pageBg = isDark ? '#020617' : '#F8FAFC';
+    const textPrimary = isDark ? '#F8FAFC' : '#0F172A';
+    const textSecondary = isDark ? '#94A3B8' : '#64748B';
+
+    if (skeletonVisible) {
+        return <DashboardSkeleton isDark={isDark} />;
+    }
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: pageBg }} edges={['top']}>
             <View style={{
-                backgroundColor: pageBg,
-                paddingHorizontal: 20,
-                height: 70,
+                backgroundColor: 'transparent',
+                paddingHorizontal: 32,
+                height: 100,
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 zIndex: 10,
             }}>
-                <Text style={{
-                    fontSize: 28,
-                    fontFamily: 'PlusJakartaSans_800ExtraBold',
-                    color: textPrimary
-                }}>
-                    {format(currentDate, 'MMMM yyyy', { locale: de })}
-                </Text>
+                <View>
+                    <Text style={{
+                        fontSize: 12,
+                        fontWeight: '800',
+                        color: textSecondary,
+                        letterSpacing: 2,
+                        textTransform: 'uppercase',
+                        marginBottom: 4
+                    }}>
+                        {format(currentDate, 'EEEE', { locale: de })}
+                    </Text>
+                    <Text style={{
+                        fontSize: 34,
+                        fontFamily: 'PlusJakartaSans_800ExtraBold',
+                        color: textPrimary,
+                        letterSpacing: -1
+                    }}>
+                        {format(currentDate, 'd. MMMM', { locale: de })}
+                    </Text>
+                </View>
                 <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => {
@@ -574,13 +602,17 @@ export default function DashboardScreen() {
                         setDate(new Date());
                     }}
                     style={{
-                        backgroundColor: isDark ? '#1C1C1E' : '#F3F4F6',
-                        paddingHorizontal: 12,
-                        paddingVertical: 6,
-                        borderRadius: 999,
+                        backgroundColor: isDark ? '#1E293B' : '#F1F5F9',
+                        width: 48,
+                        height: 48,
+                        borderRadius: 24,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderWidth: 1,
+                        borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
                     }}
                 >
-                    <Text style={{ fontSize: 12, fontWeight: '600', color: textSecondary }}>Heute</Text>
+                    <RefreshCw size={18} color={textSecondary} />
                 </TouchableOpacity>
             </View>
 
@@ -588,22 +620,22 @@ export default function DashboardScreen() {
                 onScroll={scrollHandler}
                 scrollEventThrottle={16}
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 24 }}
-                style={{ flex: 1, backgroundColor: pageBg }}
+                contentContainerStyle={{ paddingBottom: 60 }}
+                style={{ flex: 1 }}
             >
-                <Animated.View style={headerFadeStyle}>
+                <Animated.View style={[headerFadeStyle, { paddingBottom: 20 }]}>
                     <ScrollView
                         ref={dateScrollRef}
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8 }}
+                        contentContainerStyle={{ paddingHorizontal: 32, paddingVertical: 12 }}
                     >
                         {STATIC_WEEK_DATES.map((date) => {
                             const selected = isSameDay(date, currentDate);
-                            const bgColor = selected ? '#2563EB' : (isDark ? '#1C1C1E' : '#F9FBFF');
-                            const borderColor = selected ? '#2563EB' : (isDark ? '#2C2C2E' : '#E8F0FE');
-                            const textColor = selected ? '#FFFFFF' : (isDark ? '#A1A1AA' : '#71717A');
-                            const numberColor = selected ? '#FFFFFF' : (isDark ? '#FAFAFA' : '#09090B');
+                            const bgColor = selected ? '#2563EB' : (isDark ? 'transparent' : 'transparent');
+                            const borderColor = selected ? '#2563EB' : (isDark ? '#1E293B' : '#E2E8F0');
+                            const textColor = selected ? '#FFFFFF' : (isDark ? '#94A3B8' : '#94A3B8');
+                            const numberColor = selected ? '#FFFFFF' : (isDark ? '#F8FAFC' : '#0F172A');
 
                             return (
                                 <TouchableOpacity
@@ -616,24 +648,24 @@ export default function DashboardScreen() {
                                     style={{
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        marginRight: 8,
-                                        borderRadius: 14,
-                                        width: 48,
-                                        height: 56,
+                                        marginRight: 12,
+                                        borderRadius: 20,
+                                        width: 60,
+                                        height: 72,
                                         backgroundColor: bgColor,
                                         borderWidth: 1,
                                         borderColor: borderColor,
                                         shadowColor: selected ? '#2563EB' : 'transparent',
-                                        shadowOffset: { width: 0, height: 4 },
-                                        shadowOpacity: selected ? 0.3 : 0,
-                                        shadowRadius: 8,
-                                        elevation: selected ? 4 : 0
+                                        shadowOffset: { width: 0, height: 8 },
+                                        shadowOpacity: selected ? 0.4 : 0,
+                                        shadowRadius: 12,
+                                        elevation: selected ? 8 : 0
                                     }}
                                 >
-                                    <Text style={{ fontSize: 10, fontWeight: '700', marginBottom: 2, color: textColor, textTransform: 'uppercase' }}>
+                                    <Text style={{ fontSize: 10, fontWeight: '800', marginBottom: 4, color: textColor, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                                         {format(date, 'EEE', { locale: de })}
                                     </Text>
-                                    <Text style={{ fontSize: 16, fontWeight: '800', color: numberColor }}>
+                                    <Text style={{ fontSize: 18, fontWeight: '800', color: numberColor }}>
                                         {format(date, 'd')}
                                     </Text>
                                 </TouchableOpacity>
@@ -642,48 +674,57 @@ export default function DashboardScreen() {
                     </ScrollView>
                 </Animated.View>
 
-                <View className="flex-col lg:flex-row w-full max-w-7xl mx-auto lg:px-8">
+                <View className="flex-col lg:flex-row w-full max-w-screen-2xl mx-auto lg:px-8">
                     {/* LEFT COLUMN: Stats & Water */}
-                    <View className="w-full lg:w-[420px] lg:pr-8 pt-4">
+                    <View className="w-full lg:w-[460px] lg:pr-12 pt-4">
                         <Animated.View style={headerFadeStyle}>
-                            <View style={{ alignItems: 'center', paddingHorizontal: 20, paddingTop: 4, paddingBottom: 20 }}>
+                            <View style={{
+                                alignItems: 'center',
+                                paddingHorizontal: 32,
+                                paddingVertical: 32,
+                                backgroundColor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)',
+                                borderRadius: 40,
+                                borderStyle: 'dashed',
+                                borderWidth: 1,
+                                borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                                marginHorizontal: 16
+                            }}>
                                 <CalorieRing consumed={totals.calories} goal={macroGoals.calories} isDark={isDark} />
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%', marginTop: 24 }}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%', marginTop: 48 }}>
                                     <MacroRing value={totals.protein} goal={macroGoals.protein} color="#3B82F6" label="Protein" isDark={isDark} />
-                                    <MacroRing value={totals.carbs} goal={macroGoals.carbs} color="#F59E0B" label="Kohlenhydrate" isDark={isDark} />
+                                    <MacroRing value={totals.carbs} goal={macroGoals.carbs} color="#F59E0B" label="Kohlenhyd." isDark={isDark} />
                                     <MacroRing value={totals.fat} goal={macroGoals.fat} color="#EF4444" label="Fett" isDark={isDark} />
                                 </View>
                             </View>
                         </Animated.View>
 
-                        {/* Water Card moved to left column on desktop */}
-                        <View className="px-4 lg:px-0">
-                            <Animated.View entering={FadeInDown.delay(300).duration(600)}>
+                        <View className="px-6 lg:px-0 mt-8">
+                            <Animated.View entering={FadeInDown.delay(300).duration(800)}>
                                 <WaterCard isDark={isDark} date={currentDate.toISOString().split('T')[0]} />
                             </Animated.View>
                         </View>
                     </View>
 
                     {/* RIGHT COLUMN: Meals */}
-                    <View className="flex-1 bg-background lg:bg-transparent rounded-t-3xl pt-8 px-4 lg:px-0 min-h-[800px]">
-                        <View className="flex-row items-center justify-between mb-6 ml-1">
-                            <View className="flex-row items-center gap-x-2">
-                                <BookOpen size={20} color={textSecondary} />
-                                <Text className="text-sm font-bold text-textLight dark:text-zinc-500 uppercase tracking-widest">Mahlzeiten</Text>
+                    <View className="flex-1 pt-8 px-6 lg:px-0">
+                        <View className="flex-row items-center justify-between mb-8 ml-2">
+                            <View className="flex-row items-center gap-x-3">
+                                <View className="w-8 h-1 bg-primary rounded-full" />
+                                <Text className="text-xs font-black text-textLight dark:text-zinc-500 uppercase tracking-[4px]">Journal</Text>
                             </View>
                         </View>
 
-                        <View className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                            <Animated.View entering={FadeInDown.delay(500).duration(600)}>
+                        <View className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                            <Animated.View entering={FadeInDown.delay(400).duration(800)}>
                                 <MealSection title="Frühstück" type="breakfast" onAddPress={openPicker} />
                             </Animated.View>
-                            <Animated.View entering={FadeInDown.delay(600).duration(600)}>
+                            <Animated.View entering={FadeInDown.delay(500).duration(800)}>
                                 <MealSection title="Mittagessen" type="lunch" onAddPress={openPicker} />
                             </Animated.View>
-                            <Animated.View entering={FadeInDown.delay(700).duration(600)}>
+                            <Animated.View entering={FadeInDown.delay(600).duration(800)}>
                                 <MealSection title="Abendessen" type="dinner" onAddPress={openPicker} />
                             </Animated.View>
-                            <Animated.View entering={FadeInDown.delay(800).duration(600)}>
+                            <Animated.View entering={FadeInDown.delay(700).duration(800)}>
                                 <MealSection title="Snacks" type="snack" onAddPress={openPicker} />
                             </Animated.View>
                         </View>

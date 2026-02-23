@@ -10,7 +10,9 @@ module.exports = {
                 card: "var(--card)",
                 primary: "var(--primary)",
                 text: "var(--text)",
-                textLight: "var(--textLight)"
+                textLight: "var(--textLight)",
+                border: "var(--border)",
+                ring: "var(--ring)"
             },
             fontFamily: {
                 sans: ['"Plus Jakarta Sans"', 'sans-serif'],

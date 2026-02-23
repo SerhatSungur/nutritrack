@@ -315,87 +315,85 @@ export default function ProfileScreen() {
         await signOut();
     };
 
-    const headerBg = isDark ? '#09090B' : '#F8FAFC'; // Match pageBg
-    const pageBg = isDark ? '#09090B' : '#F8FAFC'; // Slate-50 for light mode depth
+    const headerBg = isDark ? 'transparent' : 'transparent';
+    const pageBg = isDark ? '#020617' : '#F8FAFC';
+    const textPrimary = isDark ? '#F8FAFC' : '#0F172A';
+    const textSecondary = isDark ? '#94A3B8' : '#64748B';
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: pageBg }} edges={['top']}>
             <View style={{
                 backgroundColor: headerBg,
-                paddingHorizontal: 20,
-                height: 70,
+                paddingHorizontal: 32,
+                height: 100,
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center'
             }}>
-                <Text style={{
-                    fontSize: 28,
-                    fontFamily: 'PlusJakartaSans_800ExtraBold',
-                    color: isDark ? '#FAFAFA' : '#09090B'
-                }}>
-                    Profil
-                </Text>
+                <View>
+                    <Text style={{
+                        fontSize: 12,
+                        fontWeight: '800',
+                        color: textSecondary,
+                        letterSpacing: 2,
+                        textTransform: 'uppercase',
+                        marginBottom: 4
+                    }}>
+                        Einstellungen
+                    </Text>
+                    <Text style={{
+                        fontSize: 34,
+                        fontFamily: 'PlusJakartaSans_800ExtraBold',
+                        color: textPrimary,
+                        letterSpacing: -1
+                    }}>
+                        Profil
+                    </Text>
+                </View>
             </View>
 
             <ScrollView
-                style={{ flex: 1, backgroundColor: pageBg }}
-                className="flex-1 px-4 pt-6"
+                style={{ flex: 1 }}
+                className="flex-1 px-6 pt-6"
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
-                contentContainerStyle={{ paddingBottom: 100 }}
+                contentContainerStyle={{ paddingBottom: 100, maxWidth: 800, alignSelf: 'center', width: '100%' }}
                 automaticallyAdjustKeyboardInsets={true}
             >
                 {/* Account Section */}
-                <Animated.View entering={FadeInDown.delay(100).duration(600)}>
-                    <View className="bg-white dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-sm border border-gray-100 dark:border-white/5 items-center">
-                        <View className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full items-center justify-center mb-4">
-                            <User size={40} color="#2563EB" />
+                <Animated.View entering={FadeInDown.delay(100).duration(800)}>
+                    <View className="bg-white dark:bg-slate-900 glass rounded-[40px] p-8 mb-8 items-center shadow-premium">
+                        <View className="w-24 h-24 bg-blue-50 dark:bg-blue-900/20 rounded-full items-center justify-center mb-6 border border-blue-100 dark:border-blue-800">
+                            <User size={48} color="#2563EB" />
                         </View>
-                        <Text className="text-xl font-bold text-text dark:text-zinc-50 mb-1">
+                        <Text className="text-2xl font-black text-text dark:text-zinc-50 mb-2">
                             {user ? user.email?.split('@')[0] : 'Anonymer Benutzer'}
                         </Text>
-                        <Text className="text-sm text-textLight dark:text-zinc-400 text-center mb-6 px-4">
+                        <Text className="text-sm font-medium text-textLight dark:text-zinc-400 text-center mb-8 px-4 opacity-70">
                             {user
                                 ? `Angemeldet als ${user.email}`
                                 : 'Deine Daten werden derzeit lokal gespeichert. Melde dich an, um sie zu synchronisieren.'}
                         </Text>
 
                         {user ? (
-                            <View className="flex-row gap-x-3 w-100%">
+                            <View className="flex-row gap-x-4 w-full">
                                 <TouchableOpacity
                                     activeOpacity={0.7}
                                     onPress={handleSync}
                                     disabled={isSyncing}
-                                    style={{
-                                        backgroundColor: '#EBF2FF',
-                                        flex: 1,
-                                        paddingVertical: 14,
-                                        borderRadius: 12,
-                                        alignItems: 'center',
-                                        flexDirection: 'row',
-                                        justifyContent: 'center',
-                                        opacity: isSyncing ? 0.6 : 1
-                                    }}
+                                    className="bg-blue-50 dark:bg-blue-900/20 flex-1 py-4 rounded-2xl items-center flex-row justify-center border border-blue-100 dark:border-blue-900/30"
                                 >
                                     {isSyncing ? <ActivityIndicator size="small" color="#2563EB" /> : <RefreshCw size={18} color="#2563EB" style={{ marginRight: 8 }} />}
-                                    <Text style={{ color: '#2563EB', fontWeight: '700', fontSize: 15 }}>Sync</Text>
+                                    <Text className="text-primary font-bold text-base">Sync</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
                                     activeOpacity={0.7}
                                     onPress={handleSignOut}
-                                    style={{
-                                        backgroundColor: '#FEE2E2',
-                                        flex: 1,
-                                        paddingVertical: 14,
-                                        borderRadius: 12,
-                                        alignItems: 'center',
-                                        flexDirection: 'row',
-                                        justifyContent: 'center'
-                                    }}
+                                    className="bg-red-50 dark:bg-red-900/20 flex-1 py-4 rounded-2xl items-center flex-row justify-center border border-red-100 dark:border-red-900/30"
                                 >
                                     <LogOut size={18} color="#EF4444" style={{ marginRight: 8 }} />
-                                    <Text style={{ color: '#EF4444', fontWeight: '700', fontSize: 15 }}>Logout</Text>
+                                    <Text className="text-red-500 font-bold text-base">Logout</Text>
                                 </TouchableOpacity>
                             </View>
                         ) : (
@@ -405,218 +403,111 @@ export default function ProfileScreen() {
                                     haptics.selection();
                                     router.push('/auth/login' as any);
                                 }}
-                                style={{
-                                    backgroundColor: '#2563EB',
-                                    width: '100%',
-                                    paddingVertical: 14,
-                                    borderRadius: 12,
-                                    alignItems: 'center',
-                                    shadowColor: '#3B82F6',
-                                    shadowOffset: { width: 0, height: 4 },
-                                    shadowOpacity: 0.2,
-                                    shadowRadius: 8,
-                                    elevation: 4
-                                }}
+                                className="bg-primary w-full py-5 rounded-2xl items-center shadow-lg shadow-primary/30"
                             >
-                                <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 16 }}>Anmelden / Registrieren</Text>
+                                <Text className="text-white font-bold text-lg">Anmelden / Registrieren</Text>
                             </TouchableOpacity>
                         )}
                     </View>
                 </Animated.View>
 
-                {/* Preferences Section */}
-                <Animated.View entering={FadeInDown.delay(200).duration(600)}>
-                    <View className="bg-white dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-sm border border-gray-100 dark:border-white/5">
-                        <Text className="text-sm font-bold text-textLight dark:text-zinc-400 uppercase tracking-wider mb-4 ml-1">Einstellungen</Text>
-
-                        <View className="flex-row items-center justify-between py-3 border-b border-gray-100 dark:border-zinc-800">
-                            <View className="flex-row items-center gap-x-3">
-                                {isDark
-                                    ? <Moon size={22} color="#8B5CF6" />
-                                    : <Sun size={22} color="#F59E0B" />
-                                }
-                                <Text className="text-base font-semibold text-text dark:text-zinc-50">Dunkelmodus</Text>
-                            </View>
-                            <CustomSwitch
-                                value={isDark}
-                                onValueChange={handleToggleDark}
-                            />
+                {/* Body Metrics Section with modern grid */}
+                <Animated.View entering={FadeInDown.delay(200).duration(800)}>
+                    <View className="bg-white dark:bg-slate-900 glass rounded-[40px] p-8 mb-8 shadow-premium">
+                        <View className="flex-row items-center gap-x-3 mb-8">
+                            <View className="w-1 h-6 bg-primary rounded-full" />
+                            <Text className="text-xs font-black text-textLight dark:text-zinc-500 uppercase tracking-[4px]">Biometrie</Text>
                         </View>
 
-                        <MacroDisplayToggle isDark={isDark} />
-                    </View>
-                </Animated.View>
-
-                {/* Body Metrics Section */}
-                <Animated.View entering={FadeInDown.delay(300).duration(600)}>
-                    <View className="bg-white dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-sm border border-gray-100 dark:border-white/5">
-                        <Text className="text-sm font-bold text-textLight dark:text-zinc-400 uppercase tracking-wider mb-5 ml-1">Körper & Biometrie</Text>
-
-                        <View className="flex-row items-center justify-between py-3 border-b border-gray-100 dark:border-zinc-800">
-                            <View className="flex-row items-center gap-x-3">
-                                <User size={20} color="#3B82F6" />
-                                <Text className="text-base font-semibold text-text dark:text-zinc-50">Geschlecht</Text>
-                            </View>
-                            <View className="w-1/2">
-                                <SegmentedControl
-                                    options={[{ label: 'M', value: 'male' }, { label: 'W', value: 'female' }]}
-                                    value={userProfile.gender}
-                                    onChange={(v) => handleUpdateProfile({ gender: v })}
-                                    isDark={isDark}
-                                />
-                            </View>
-                        </View>
-
-                        <View className="flex-row items-center justify-between py-3 border-b border-gray-100 dark:border-zinc-800">
-                            <View className="flex-row items-center gap-x-3">
-                                <User size={20} color="#3B82F6" />
-                                <Text className="text-base font-semibold text-text dark:text-zinc-50">Alter</Text>
-                            </View>
-                            <ProfileNumberInput
-                                initialValue={userProfile.age}
-                                onUpdate={(val) => handleUpdateProfile({ age: val })}
-                                unit="Jahre"
-                                maxLength={3}
-                            />
-                        </View>
-
-                        <View className="flex-row items-center justify-between py-3 border-b border-gray-100 dark:border-zinc-800">
-                            <View className="flex-row items-center gap-x-3">
-                                <Ruler size={20} color="#10B981" />
-                                <Text className="text-base font-semibold text-text dark:text-zinc-50">Größe</Text>
-                            </View>
-                            <ProfileNumberInput
-                                initialValue={userProfile.height}
-                                onUpdate={(val) => handleUpdateProfile({ height: val })}
-                                unit="cm"
-                                maxLength={3}
-                            />
-                        </View>
-
-                        <View className="flex-row items-center justify-between py-3 border-b border-gray-100 dark:border-zinc-800">
-                            <View className="flex-row items-center gap-x-3">
-                                <Scale size={20} color="#6366F1" />
-                                <Text className="text-base font-semibold text-text dark:text-zinc-50">Gewicht</Text>
-                            </View>
-                            <ProfileNumberInput
-                                initialValue={userProfile.weight}
-                                onUpdate={(val) => handleUpdateProfile({ weight: val })}
-                                unit="kg"
-                                maxLength={3}
-                            />
-                        </View>
-
-                        <View className="py-4 border-b border-gray-100 dark:border-zinc-800">
-                            <View className="flex-row items-center gap-x-3 mb-4">
-                                <Activity size={20} color="#F59E0B" />
-                                <View>
-                                    <Text className="text-base font-semibold text-text dark:text-zinc-50">Aktivitätslevel</Text>
-                                    <Text className="text-xs text-textLight dark:text-zinc-400">Beeinflusst deinen Kalorienverbrauch</Text>
+                        <View className="space-y-6">
+                            <View className="flex-row items-center justify-between pb-6 border-b border-border">
+                                <View className="flex-row items-center gap-x-4">
+                                    <View className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                        <User size={20} color="#2563EB" strokeWidth={2.5} />
+                                    </View>
+                                    <Text className="text-[17px] font-bold text-text dark:text-zinc-50">Geschlecht</Text>
+                                </View>
+                                <View className="w-32">
+                                    <SegmentedControl
+                                        options={[{ label: 'M', value: 'male' }, { label: 'W', value: 'female' }]}
+                                        value={userProfile.gender}
+                                        onChange={(v) => handleUpdateProfile({ gender: v })}
+                                        isDark={isDark}
+                                    />
                                 </View>
                             </View>
-                            <View className="bg-gray-50 dark:bg-zinc-800/50 p-1.5 rounded-2xl">
-                                {ACTIVITY_LEVELS.map((level) => (
-                                    <Pressable
-                                        key={level.value}
-                                        onPress={() => {
-                                            haptics.selection();
-                                            handleUpdateProfile({ activityLevel: level.value });
-                                        }}
-                                        className={`flex-row items-center justify-between px-3 py-2.5 rounded-xl mb-1 ${userProfile.activityLevel === level.value ? 'bg-white dark:bg-zinc-700 shadow-sm' : ''}`}
-                                    >
-                                        <Text className={`text-sm ${userProfile.activityLevel === level.value ? 'font-bold text-primary' : 'text-textLight dark:text-zinc-400'}`}>
-                                            {level.label}
-                                        </Text>
-                                        {userProfile.activityLevel === level.value && <Check size={16} color="#2563EB" />}
-                                    </Pressable>
-                                ))}
-                            </View>
-                        </View>
 
-                        <View className="py-4">
-                            <View className="flex-row items-center gap-x-3 mb-4">
-                                <Target size={20} color="#EF4444" />
-                                <Text className="text-base font-semibold text-text dark:text-zinc-50">Dein Ziel</Text>
+                            <View className="flex-row items-center justify-between pb-6 border-b border-border">
+                                <View className="flex-row items-center gap-x-4">
+                                    <View className="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+                                        <Activity size={20} color="#6366F1" strokeWidth={2.5} />
+                                    </View>
+                                    <Text className="text-[17px] font-bold text-text dark:text-zinc-50">Alter</Text>
+                                </View>
+                                <ProfileNumberInput
+                                    initialValue={userProfile.age}
+                                    onUpdate={(val) => handleUpdateProfile({ age: val })}
+                                    unit="Jahre"
+                                    maxLength={3}
+                                />
                             </View>
-                            <SegmentedControl
-                                options={[
-                                    { label: 'Abnehmen', value: 'lose' },
-                                    { label: 'Halten', value: 'maintain' },
-                                    { label: 'Aufbauen', value: 'gain' }
-                                ]}
-                                value={userProfile.goal}
-                                onChange={(v) => handleUpdateProfile({ goal: v })}
-                                isDark={isDark}
-                            />
+
+                            <View className="flex-row items-center justify-between pb-6 border-b border-border">
+                                <View className="flex-row items-center gap-x-4">
+                                    <View className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+                                        <Ruler size={20} color="#10B981" strokeWidth={2.5} />
+                                    </View>
+                                    <Text className="text-[17px] font-bold text-text dark:text-zinc-50">Größe</Text>
+                                </View>
+                                <ProfileNumberInput
+                                    initialValue={userProfile.height}
+                                    onUpdate={(val) => handleUpdateProfile({ height: val })}
+                                    unit="cm"
+                                    maxLength={3}
+                                />
+                            </View>
+
+                            <View className="flex-row items-center justify-between">
+                                <View className="flex-row items-center gap-x-4">
+                                    <View className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                                        <Scale size={20} color="#8B5CF6" strokeWidth={2.5} />
+                                    </View>
+                                    <Text className="text-[17px] font-bold text-text dark:text-zinc-50">Gewicht</Text>
+                                </View>
+                                <ProfileNumberInput
+                                    initialValue={userProfile.weight}
+                                    onUpdate={(val) => handleUpdateProfile({ weight: val })}
+                                    unit="kg"
+                                    maxLength={3}
+                                />
+                            </View>
                         </View>
                     </View>
                 </Animated.View>
 
                 {/* Macro Goals Section */}
-                <Animated.View entering={FadeInDown.delay(400).duration(600)}>
-                    <View className="bg-white dark:bg-zinc-900 rounded-3xl p-5 mb-6 shadow-sm border border-gray-100 dark:border-white/5">
-                        <View className="flex-row items-center justify-between mb-5 ml-1">
-                            <View className="flex-row items-center gap-x-2">
-                                <Target size={20} color="#10B981" />
-                                <Text className="text-sm font-bold text-textLight dark:text-zinc-400 uppercase tracking-wider">Tägliche Makro-Ziele</Text>
-                            </View>
-                            <Pressable
-                                onPress={handleAutoCalculate}
-                                className="bg-primary/10 px-3 py-2 rounded-full flex-row items-center gap-x-1 active:opacity-70"
-                            >
-                                <Activity size={14} color="#2563EB" />
-                                <Text className="text-[12px] font-bold text-primary">Auto-Berechnen</Text>
-                            </Pressable>
-                        </View>
-
-                        {[
-                            { label: 'Kalorien', key: 'calories' as const, unit: 'kcal', max: 5 },
-                            { label: 'Protein', key: 'protein' as const, unit: 'g', max: 3 },
-                            { label: 'Kohlenhydrate', key: 'carbs' as const, unit: 'g', max: 3 },
-                            { label: 'Fett', key: 'fat' as const, unit: 'g', max: 3 },
-                        ].map(({ label, key, unit, max }, i, arr) => (
-                            <View key={key} className={`flex-row justify-between items-center py-3 ${i < arr.length - 1 ? 'border-b border-gray-100 dark:border-zinc-800' : ''}`}>
-                                <Text className="text-base font-semibold text-text dark:text-zinc-50">{label}</Text>
-                                <ProfileNumberInput
-                                    initialValue={macroGoals[key]}
-                                    onUpdate={(val) => handleUpdateGoal(key, val)}
-                                    unit={unit}
-                                    maxLength={max}
-                                />
-                            </View>
-                        ))}
-
-                        <View className="mt-4 bg-blue-50 dark:bg-zinc-800/30 p-4 rounded-2xl flex-row items-start gap-x-3">
-                            <Info size={18} color="#3B82F6" className="mt-0.5" />
-                            <Text className="flex-1 text-xs text-blue-700 dark:text-blue-300 leading-4">
-                                Nutze "Auto-Berechnen", um wissenschaftlich fundierte Ziele basierend auf deinen Biometrieangaben zu erhalten.
-                            </Text>
-                        </View>
-                    </View>
-                </Animated.View>
-
-                {/* Water Goal Section */}
-                <Animated.View entering={FadeInDown.delay(500).duration(600)}>
-                    <View className="bg-white dark:bg-zinc-900 rounded-3xl p-5 mb-8 shadow-sm border border-gray-100 dark:border-white/5">
-                        <View className="flex-row items-center mb-4 ml-1 gap-x-2">
-                            <Droplets size={20} color="#3B82F6" />
-                            <Text className="text-sm font-bold text-textLight dark:text-zinc-400 uppercase tracking-wider">Wasser-Ziel</Text>
-                        </View>
-                        <View className="flex-row justify-between items-center py-1">
-                            <Text className="text-base font-semibold text-text dark:text-zinc-50">Tagesziel</Text>
-                            <ProfileNumberInput
-                                initialValue={waterGoal}
-                                onUpdate={(val) => setWaterGoal(Math.max(100, val))}
-                                unit="ml"
-                                maxLength={5}
-                            />
-                        </View>
-                    </View>
-                </Animated.View>
-
-                {/* Analytics & Trends */}
-                <Animated.View entering={FadeInDown.delay(550).duration(600)}>
+                <Animated.View entering={FadeInDown.delay(300).duration(800)}>
                     <AnalyticsSection isDark={isDark} />
+                </Animated.View>
+
+                {/* Preferences Section at bottom */}
+                <Animated.View entering={FadeInDown.delay(400).duration(800)}>
+                    <View className="bg-white dark:bg-slate-900 glass rounded-[40px] p-8 mb-8 shadow-premium">
+                        <View className="flex-row items-center justify-between mb-8">
+                            <View className="flex-row items-center gap-x-3">
+                                <View className="w-1 h-6 bg-amber-400 rounded-full" />
+                                <Text className="text-xs font-black text-textLight dark:text-zinc-500 uppercase tracking-[4px]">Einstell.</Text>
+                            </View>
+                            <TouchableOpacity
+                                onPress={handleToggleDark}
+                                className="bg-zinc-100 dark:bg-zinc-800 p-3 rounded-2xl"
+                            >
+                                {isDark ? <Sun size={20} color="#F59E0B" /> : <Moon size={20} color="#6366F1" />}
+                            </TouchableOpacity>
+                        </View>
+
+                        <MacroDisplayToggle isDark={isDark} />
+                    </View>
                 </Animated.View>
             </ScrollView>
         </SafeAreaView>

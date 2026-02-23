@@ -34,82 +34,56 @@ const RecipeDetailScreen = () => {
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-background dark:bg-zinc-950" edges={['top']}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#020617' : '#F8FAFC' }} edges={['top']}>
             {/* Header */}
             <View style={{
-                height: 70,
+                height: 100,
                 flexDirection: 'row',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingHorizontal: 20,
-                backgroundColor: isDark ? '#18181B' : '#FFFFFF',
-                borderBottomWidth: 1,
-                borderBottomColor: isDark ? '#27272A' : '#F3F4F6'
+                paddingHorizontal: 32,
+                backgroundColor: 'transparent',
+                zIndex: 10,
             }}>
-                <View className="flex-row items-center flex-1 pr-4">
-                    <View
-                        onStartShouldSetResponder={() => true}
-                        onResponderRelease={() => {
-                            haptics.lightImpact();
-                            router.back();
-                        }}
-                        className="p-2 mr-2"
-                    >
-                        <ChevronLeft size={28} color={isDark ? '#FAFAFA' : '#1F2937'} />
-                    </View>
-                    <Text style={{ fontSize: 22, fontWeight: '800', color: isDark ? '#FAFAFA' : '#09090B' }} className="flex-1" numberOfLines={1}>{recipe.name}</Text>
-                </View>
-                <View className="flex-row items-center gap-x-2">
-                    <TouchableOpacity
-                        activeOpacity={0.7}
-                        onPress={() => {
-                            haptics.lightImpact();
-                            router.push(`/recipes/create?editId=${recipe.id}`);
-                        }}
-                        style={{
-                            width: 44,
-                            height: 44,
-                            backgroundColor: isDark ? '#27272A' : '#EBF2FF',
-                            borderRadius: 14,
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <Edit2 size={20} color="#2563EB" />
-                    </TouchableOpacity>
+                <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => {
+                        haptics.lightImpact();
+                        router.back();
+                    }}
+                    style={{
+                        backgroundColor: isDark ? '#1E293B' : '#F1F5F9',
+                        width: 48,
+                        height: 48,
+                        borderRadius: 24,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 20,
+                        borderWidth: 1,
+                        borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
+                    }}
+                >
+                    <ChevronLeft size={24} color={isDark ? '#94A3B8' : '#64748B'} />
+                </TouchableOpacity>
 
-                    <TouchableOpacity
-                        activeOpacity={0.7}
-                        onPress={() => {
-                            haptics.warning();
-                            Alert.alert(
-                                "Rezept löschen",
-                                "Möchtest du dieses Rezept wirklich dauerhaft löschen?",
-                                [
-                                    { text: "Abbrechen", style: "cancel" },
-                                    {
-                                        text: "Löschen",
-                                        style: "destructive",
-                                        onPress: () => {
-                                            const { deleteRecipe } = useLogStore.getState();
-                                            deleteRecipe(recipe.id);
-                                            router.back();
-                                        }
-                                    }
-                                ]
-                            );
-                        }}
-                        style={{
-                            width: 44,
-                            height: 44,
-                            backgroundColor: isDark ? '#27272A' : '#FEE2E2',
-                            borderRadius: 14,
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <Trash2 size={20} color="#EF4444" />
-                    </TouchableOpacity>
+                <View style={{ flex: 1 }}>
+                    <Text style={{
+                        fontSize: 10,
+                        fontWeight: '800',
+                        color: isDark ? '#94A3B8' : '#64748B',
+                        letterSpacing: 2,
+                        textTransform: 'uppercase',
+                        marginBottom: 4
+                    }}>
+                        Rezept Detail
+                    </Text>
+                    <Text style={{
+                        fontSize: 28,
+                        fontFamily: 'PlusJakartaSans_800ExtraBold',
+                        color: isDark ? '#F8FAFC' : '#0F172A',
+                        letterSpacing: -1
+                    }} numberOfLines={1}>
+                        {recipe.name}
+                    </Text>
                 </View>
             </View>
 
@@ -118,32 +92,32 @@ const RecipeDetailScreen = () => {
                     {/* Macros Overview */}
                     <Animated.View
                         entering={FadeInDown.delay(100).springify()}
-                        className="bg-card dark:bg-zinc-900 rounded-2xl p-5 mb-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+                        className="bg-white dark:bg-zinc-900 rounded-[32px] p-8 mb-8 border border-gray-100 dark:border-white/5 shadow-premium"
                     >
-                        <View className="items-center mb-4">
-                            <Text className="text-5xl font-extrabold text-primary">{recipe.totalCalories}</Text>
-                            <Text className="text-sm font-semibold text-textLight dark:text-zinc-400 uppercase tracking-widest mt-1">Kalorien</Text>
+                        <View className="items-center mb-8">
+                            <Text className="text-6xl font-black text-primary tracking-tighter">{recipe.totalCalories}</Text>
+                            <Text className="text-xs font-black text-textLight dark:text-zinc-500 uppercase tracking-[4px] mt-2">Gesamt Kalorien</Text>
                         </View>
 
-                        <View className="flex-row justify-between border-t border-gray-100 dark:border-zinc-800 pt-4">
+                        <View className="flex-row justify-between border-t border-gray-50 dark:border-white/5 pt-8">
                             <View className="items-center flex-1">
-                                <Text className="text-xl font-bold text-text dark:text-zinc-50 mb-1">{recipe.totalProtein}g</Text>
-                                <Text className="text-xs font-semibold text-textLight dark:text-zinc-400 uppercase tracking-wider">Protein</Text>
+                                <Text className="text-2xl font-black text-text dark:text-zinc-50 mb-1">{recipe.totalProtein}g</Text>
+                                <Text className="text-[10px] font-black text-textLight dark:text-zinc-500 uppercase tracking-widest">Protein</Text>
                             </View>
-                            <View className="items-center flex-1 border-l border-r border-gray-100 dark:border-zinc-800 px-2">
-                                <Text className="text-xl font-bold text-text dark:text-zinc-50 mb-1">{recipe.totalCarbs}g</Text>
-                                <Text className="text-xs font-semibold text-textLight dark:text-zinc-400 uppercase tracking-wider">Kohlenhydrate</Text>
+                            <View className="items-center flex-1 border-l border-r border-gray-50 dark:border-white/5 px-2">
+                                <Text className="text-2xl font-black text-text dark:text-zinc-50 mb-1">{recipe.totalCarbs}g</Text>
+                                <Text className="text-[10px] font-black text-textLight dark:text-zinc-500 uppercase tracking-widest">Kohlenhyd.</Text>
                             </View>
                             <View className="items-center flex-1">
-                                <Text className="text-xl font-bold text-text dark:text-zinc-50 mb-1">{recipe.totalFat}g</Text>
-                                <Text className="text-xs font-semibold text-textLight dark:text-zinc-400 uppercase tracking-wider">Fett</Text>
+                                <Text className="text-2xl font-black text-text dark:text-zinc-50 mb-1">{recipe.totalFat}g</Text>
+                                <Text className="text-[10px] font-black text-textLight dark:text-zinc-500 uppercase tracking-widest">Fett</Text>
                             </View>
                         </View>
                     </Animated.View>
 
                     {/* Quick Log Action Buttons */}
-                    <Animated.View entering={FadeInDown.delay(150).springify()} className="mb-8 p-4 bg-gray-50 dark:bg-zinc-800/80 rounded-2xl border border-gray-100 dark:border-zinc-800">
-                        <Text className="text-sm font-bold text-textLight dark:text-zinc-400 mb-4 uppercase tracking-wider text-center">Rezept loggen</Text>
+                    <Animated.View entering={FadeInDown.delay(150).springify()} className="mb-8 p-6 bg-blue-50/50 dark:bg-blue-500/5 rounded-[32px] border border-blue-100 dark:border-blue-900/20">
+                        <Text className="text-[11px] font-black text-primary uppercase tracking-[3px] mb-6 text-center">Zu Journal hinzufügen</Text>
                         <View className="flex-row flex-wrap justify-between gap-y-3">
                             {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((meal) => {
                                 const mealTranslations: Record<string, string> = {
@@ -179,42 +153,49 @@ const RecipeDetailScreen = () => {
                     </Animated.View>
 
                     {/* Ingredients List */}
-                    <Animated.View entering={FadeInDown.delay(200).springify()} className="bg-card dark:bg-zinc-900 rounded-2xl p-5 mb-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-                        <Text className="text-md font-bold text-text dark:text-zinc-50 mb-4">Zutaten ({recipe.ingredients.length})</Text>
+                    <Animated.View entering={FadeInDown.delay(200).springify()} className="bg-white dark:bg-zinc-900 rounded-[32px] p-6 mb-8 border border-gray-100 dark:border-white/5 shadow-premium">
+                        <Text className="text-[11px] font-black text-textLight dark:text-zinc-500 uppercase tracking-[3px] mb-6">Zutaten ({recipe.ingredients.length})</Text>
                         {recipe.ingredients.map((ing, idx) => (
-                            <View key={ing.id} className={`flex-row justify-between py-3 ${idx !== recipe.ingredients.length - 1 ? 'border-b border-gray-100 dark:border-zinc-800' : ''}`}>
-                                <Text className="text-base font-medium text-text dark:text-zinc-50 flex-1 pr-4">{ing.name}</Text>
-                                <View className="items-end">
-                                    <Text className="font-semibold text-text dark:text-zinc-50">
+                            <View key={ing.id} className={`flex-row justify-between py-4 ${idx !== recipe.ingredients.length - 1 ? 'border-b border-gray-50 dark:border-white/5' : ''}`}>
+                                <View className="flex-1 pr-4">
+                                    <Text className="text-base font-bold text-text dark:text-zinc-50">{ing.name}</Text>
+                                    <Text className="text-xs text-textLight dark:text-zinc-500 mt-1 uppercase tracking-widest font-black">
                                         {ing.useServing && ing.servingSize ? `${ing.amount} x ${ing.servingSize}` : `${ing.amount}g`}
                                     </Text>
-                                    <Text className="text-xs text-textLight dark:text-zinc-400 mt-1">
-                                        {Math.round(ing.caloriesPer100g * ((ing.useServing && ing.servingQuantity ? ing.amount * ing.servingQuantity : ing.amount) / 100))} kcal
-                                    </Text>
+                                </View>
+                                <View className="items-end justify-center">
+                                    <View className="bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full">
+                                        <Text className="text-xs font-black text-primary dark:text-blue-400">
+                                            {Math.round(ing.caloriesPer100g * ((ing.useServing && ing.servingQuantity ? ing.amount * ing.servingQuantity : ing.amount) / 100))} kcal
+                                        </Text>
+                                    </View>
                                 </View>
                             </View>
                         ))}
                     </Animated.View>
 
                     {/* Notes Section */}
-                    <Animated.View entering={FadeInDown.delay(250).springify()} className="bg-card dark:bg-zinc-900 rounded-2xl p-5 mb-8 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-                        <Text className="text-md font-bold text-text dark:text-zinc-50 mb-3">Zubereitungshinweise</Text>
+                    <Animated.View entering={FadeInDown.delay(250).springify()} className="bg-white dark:bg-zinc-900 rounded-[32px] p-6 mb-12 border border-gray-100 dark:border-white/5 shadow-premium">
+                        <Text className="text-[11px] font-black text-textLight dark:text-zinc-500 uppercase tracking-[3px] mb-4">Zubereitungshinweise</Text>
                         <TextInput
                             multiline
-                            className="text-base text-text dark:text-zinc-50 min-h-[120px] bg-gray-50 dark:bg-zinc-800 rounded-xl p-4 border border-gray-100 dark:border-zinc-800 mb-3"
+                            className="text-base text-text dark:text-zinc-50 min-h-[120px] bg-gray-50/50 dark:bg-zinc-800/50 rounded-2xl p-5 border border-gray-100 dark:border-white/5 mb-4 font-medium"
                             placeholder="Kochempfehlungen, Tipps oder Anpassungen eingeben..."
-                            placeholderTextColor="#9CA3AF"
+                            placeholderTextColor={isDark ? '#475569' : '#94A3B8'}
                             value={recipe.notes || ''}
                             onChangeText={(text) => updateRecipe(recipe.id, { notes: text })}
                             textAlignVertical="top"
                         />
-                        <View
-                            onStartShouldSetResponder={() => true}
-                            onResponderRelease={() => Keyboard.dismiss()}
-                            className="bg-primary ml-auto px-4 py-2 rounded-lg"
+                        <TouchableOpacity
+                            activeOpacity={0.7}
+                            onPress={() => {
+                                haptics.success();
+                                Keyboard.dismiss();
+                            }}
+                            className="bg-primary/10 dark:bg-primary/20 self-end px-6 py-3 rounded-xl border border-primary/20"
                         >
-                            <Text className="text-white font-bold text-sm">Notizen speichern</Text>
-                        </View>
+                            <Text className="text-primary font-black text-xs uppercase tracking-widest">Notizen speichern</Text>
+                        </TouchableOpacity>
                     </Animated.View>
 
                     <View className="h-12" />

@@ -18,18 +18,20 @@ SplashScreen.preventAutoHideAsync();
 
 const themeVars = {
     light: vars({
-        "--background": "#F4F4F5",
+        "--background": "#F8FAFC",
         "--card": "#FFFFFF",
         "--primary": "#2563EB",
-        "--text": "#09090B",
-        "--textLight": "#71717A",
+        "--text": "#0F172A",
+        "--textLight": "#64748B",
+        "--border": "#E2E8F0",
     }),
     dark: vars({
-        "--background": "#09090B",
-        "--card": "#18181B",
+        "--background": "#020617",
+        "--card": "#0F172A",
         "--primary": "#3B82F6",
-        "--text": "#FAFAFA",
-        "--textLight": "#A1A1AA",
+        "--text": "#F8FAFC",
+        "--textLight": "#94A3B8",
+        "--border": "#1E293B",
     })
 };
 
