@@ -131,6 +131,7 @@ interface LogState {
     isFavorite: (foodId: string) => boolean;
 
     setDisplayMacroMode: (mode: 'remaining' | 'consumed') => void;
+    clearStore: () => void;
 }
 
 export const useLogStore = create<LogState>()(
@@ -297,6 +298,16 @@ export const useLogStore = create<LogState>()(
             isFavorite: (foodId) => get().favoriteFoods.some(f => f.id === foodId),
 
             setDisplayMacroMode: (mode) => set({ displayMacroMode: mode }),
+
+            clearStore: () => set({
+                logs: [],
+                recipes: [],
+                waterIntake: 0,
+                waterHistory: [],
+                weightHistory: [],
+                recentFoods: [],
+                favoriteFoods: []
+            }),
         }),
         {
             name: 'nutritrack-storage',

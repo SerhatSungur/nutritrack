@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-import type { Session, User } from '@supabase/supabase-js';
+import { useLogStore } from './useLogStore';
+import type { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
 
 interface AuthState {
     session: Session | null;
@@ -37,7 +38,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             });
 
             // Listen for auth changes
-            supabase.auth.onAuthStateChange((_event, session) => {
+            supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
                 set({
                     session,
                     user: session?.user ?? null
@@ -51,6 +52,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     signOut: async () => {
         await supabase.auth.signOut();
+        useLogStore.getState().clearStore();
         set({ session: null, user: null });
     },
 }));

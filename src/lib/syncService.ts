@@ -82,7 +82,7 @@ export const syncService = {
                 .from('profiles')
                 .select('*')
                 .eq('id', user.id)
-                .single();
+                .maybeSingle();
 
             if (profile) {
                 useLogStore.getState().setUserProfile({
@@ -122,7 +122,7 @@ export const syncService = {
                     fat: l.fat,
                     date: l.log_date,
                 }));
-                // For simplicity, replace local with cloud on login
+                // Replace local state with cloud state completely to ensure fresh pull overrides old cache
                 useLogStore.setState({ logs: formattedLogs });
             }
 
