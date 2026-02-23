@@ -1,6 +1,7 @@
 console.log("HELLO FROM APP ENTRY POINT - EVALUATION STARTED");
 
 import { Stack } from "expo-router";
+export { ErrorBoundary } from "expo-router";
 import "../global.css";
 import { View, Platform } from "react-native";
 import { useColorScheme, vars } from "nativewind";
@@ -8,7 +9,7 @@ import { StatusBar } from "expo-status-bar";
 import { useFonts, PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold } from "@expo-google-fonts/plus-jakarta-sans";
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from "react";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaProvider, initialWindowMetrics } from "react-native-safe-area-context";
 import { useAuthStore } from "../store/useAuthStore";
 import { syncService } from "../lib/syncService";
 
@@ -65,17 +66,17 @@ export default function RootLayout() {
         }
     }, [fontsLoaded, fontError]);
 
-    // Pull cloud data once auth is ready and user exists
+    // Hide splash screen when fonts are loaded
     useEffect(() => {
-        if (authInitialized && user) {
-            syncService.pullAll();
+        if (fontsLoaded || fontError) {
+            SplashScreen.hideAsync().catch(() => { });
         }
-    }, [authInitialized, user]);
+    }, [fontsLoaded, fontError]);
 
     // Wrap Stack in a View with the theme vars
     // We use style to pass the CSS variables stably and background colors directly
     return (
-        <SafeAreaProvider>
+        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
             <View
                 style={[{ flex: 1 }, activeTheme as any]}
                 className="bg-background"
