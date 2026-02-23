@@ -1,7 +1,7 @@
 import {
     View, Text, ScrollView,
     Dimensions, Pressable, TouchableOpacity,
-    Modal, FlatList, TextInput, Alert,
+    Modal, FlatList, TextInput, Alert, Platform
 } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -603,16 +603,20 @@ export default function DashboardScreen() {
                     }}
                     style={{
                         backgroundColor: isDark ? '#1E293B' : '#F1F5F9',
-                        width: 48,
                         height: 48,
+                        paddingHorizontal: 16,
                         borderRadius: 24,
                         alignItems: 'center',
                         justifyContent: 'center',
+                        flexDirection: 'row',
+                        gap: 8,
                         borderWidth: 1,
-                        borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
-                    }}
+                        borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                        ...(Platform.OS === 'web' ? { cursor: 'pointer' } : {})
+                    } as any}
                 >
-                    <RefreshCw size={18} color={textSecondary} />
+                    <RefreshCw size={16} color={textSecondary} />
+                    <Text style={{ color: textSecondary, fontWeight: '700', fontSize: 14 }}>Heute</Text>
                 </TouchableOpacity>
             </View>
 

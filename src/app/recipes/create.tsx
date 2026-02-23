@@ -1,4 +1,4 @@
-import { View, Text, TextInput, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, ScrollView, ActivityIndicator, useWindowDimensions, Pressable, Platform } from 'react-native';
 import { CustomSwitch } from '../../components/CustomSwitch';
 import { useColorScheme } from 'nativewind';
 import { useState, useEffect } from 'react';
@@ -172,262 +172,283 @@ export default function CreateRecipeScreen() {
         router.back();
     };
 
+    const { width } = useWindowDimensions();
+    const isDesktop = width >= 768;
+
     return (
-        <SafeAreaView className="flex-1 bg-background dark:bg-zinc-950" edges={['top']}>
-            <View style={{
-                height: 70,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingHorizontal: 20,
-                backgroundColor: isDark ? '#18181B' : '#FFFFFF',
-                borderBottomWidth: 1,
-                borderBottomColor: isDark ? '#27272A' : '#F3F4F6'
-            }}>
-                <View className="flex-row items-center flex-1 pr-4">
+        <View style={{ flex: 1, flexDirection: 'row', backgroundColor: isDesktop ? 'rgba(0,0,0,0.5)' : 'transparent' }}>
+            {isDesktop && (
+                <Pressable style={{ flex: 1 }} onPress={() => router.back()} />
+            )}
+            <SafeAreaView
+                className={`bg-background dark:bg-zinc-950 ${isDesktop ? 'shadow-2xl' : 'flex-1'}`}
+                edges={['top', 'bottom']}
+                style={isDesktop ? { width: 500, height: '100%', borderLeftWidth: 1, borderLeftColor: isDark ? '#27272A' : '#E5E7EB' } : {}}
+            >
+                <View style={{
+                    height: 70,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingHorizontal: 20,
+                    backgroundColor: isDark ? '#18181B' : '#FFFFFF',
+                    borderBottomWidth: 1,
+                    borderBottomColor: isDark ? '#27272A' : '#F3F4F6'
+                }}>
+                    <View className="flex-row items-center flex-1 pr-4">
+                        <View
+                            onStartShouldSetResponder={() => true}
+                            onResponderRelease={() => {
+                                haptics.lightImpact();
+                                router.back();
+                            }}
+                            className="p-2 mr-2"
+                        >
+                            <ChevronLeft size={28} color={isDark ? '#FAFAFA' : '#1F2937'} />
+                        </View>
+                        <Text style={{ fontSize: 22, fontWeight: '800', color: isDark ? '#FAFAFA' : '#09090B' }} className="flex-1" numberOfLines={1}>
+                            {editId ? 'Rezept bearbeiten' : 'Neues Rezept'}
+                        </Text>
+                    </View>
                     <View
                         onStartShouldSetResponder={() => true}
                         onResponderRelease={() => {
                             haptics.lightImpact();
                             router.back();
                         }}
-                        className="p-2 mr-2"
+                        className="p-2"
                     >
-                        <ChevronLeft size={28} color={isDark ? '#FAFAFA' : '#1F2937'} />
+                        <X size={24} color={isDark ? '#FAFAFA' : '#1F2937'} />
                     </View>
-                    <Text style={{ fontSize: 22, fontWeight: '800', color: isDark ? '#FAFAFA' : '#09090B' }} className="flex-1" numberOfLines={1}>
-                        {editId ? 'Rezept bearbeiten' : 'Neues Rezept'}
-                    </Text>
                 </View>
-                <View
-                    onStartShouldSetResponder={() => true}
-                    onResponderRelease={() => {
-                        haptics.lightImpact();
-                        router.back();
-                    }}
-                    className="p-2"
+
+                <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                    automaticallyAdjustKeyboardInsets={true}
+                    contentContainerStyle={{ paddingBottom: 100 }}
                 >
-                    <X size={24} color={isDark ? '#FAFAFA' : '#1F2937'} />
-                </View>
-            </View>
-
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-                automaticallyAdjustKeyboardInsets={true}
-                contentContainerStyle={{ paddingBottom: 100 }}
-            >
-                {/* Basic Info */}
-                <Animated.View entering={FadeInDown.delay(100).springify()} className="bg-card dark:bg-zinc-900 p-4 rounded-2xl mb-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-                    <Text className="text-sm font-semibold text-textLight dark:text-zinc-400 mb-2 uppercase tracking-wider">Rezeptname</Text>
-                    <TextInput
-                        value={name}
-                        onChangeText={setName}
-                        placeholder="z.B. Avocado Toast"
-                        className="border-b border-gray-200 dark:border-zinc-700 py-3 text-lg font-medium text-text dark:text-zinc-50"
-                        placeholderTextColor="#9CA3AF"
-                    />
-
-                    <View className="flex-row items-center justify-between mt-6 pt-4 border-t border-gray-100 dark:border-zinc-800">
-                        <View className="flex-row items-center gap-x-3">
-                            <View className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                                <Globe size={18} color="#2563EB" />
-                            </View>
-                            <View>
-                                <Text className="text-base font-semibold text-text dark:text-zinc-50">Öffentlich teilen</Text>
-                                <Text className="text-xs text-textLight dark:text-zinc-400">Für die Community sichtbar machen</Text>
-                            </View>
-                        </View>
-                        <CustomSwitch
-                            value={isPublic}
-                            onValueChange={setIsPublic}
-                        />
-                    </View>
-                </Animated.View>
-
-                {/* Current Ingredients */}
-                {ingredients.length > 0 && (
-                    <Animated.View entering={FadeInDown.delay(150).springify()} className="bg-card dark:bg-zinc-900 p-4 rounded-2xl mb-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-                        <Text className="text-sm font-semibold text-textLight dark:text-zinc-400 mb-3 uppercase tracking-wider">Zutaten</Text>
-                        {ingredients.map((ing) => (
-                            <View key={ing.id} className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-zinc-800 last:border-0">
-                                <View className="flex-1 mr-4">
-                                    <Text className="text-base font-medium text-text dark:text-zinc-50 mb-1" numberOfLines={1}>{ing.name}</Text>
-                                    <Text className="text-sm text-textLight dark:text-zinc-400 font-medium">
-                                        {Math.round(ing.caloriesPer100g * ((ing.useServing && ing.servingQuantity ? ing.amount * ing.servingQuantity : ing.amount) / 100))} kcal
-                                        {ing.useServing && ing.servingSize ? ` • (${ing.servingSize})` : ''}
-                                    </Text>
-                                </View>
-
-                                <IngredientAmountInput
-                                    initialAmount={ing.amount}
-                                    initialUseServing={ing.useServing}
-                                    servingSize={ing.servingSize}
-                                    onUpdate={(val, useServ) => handleUpdateAmount(ing.id, val, useServ)}
-                                    unit={ing.unit || 'g'}
-                                />
-
-                                <View
-                                    onStartShouldSetResponder={() => true}
-                                    onResponderRelease={() => handleRemoveIngredient(ing.id)}
-                                    className="p-2 bg-red-50 rounded-full"
-                                >
-                                    <X size={16} color="#EF4444" />
-                                </View>
-                            </View>
-                        ))}
-                    </Animated.View>
-                )}
-
-                {/* Search */}
-                <Animated.View entering={FadeInDown.delay(200).springify()} className="bg-card dark:bg-zinc-900 p-4 rounded-2xl mb-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-                    <Text className="text-sm font-semibold text-textLight dark:text-zinc-400 mb-3 uppercase tracking-wider">Zutat hinzufügen</Text>
-                    <View className="flex-row items-center border border-gray-200 dark:border-zinc-700 rounded-xl px-3 bg-gray-50 dark:bg-zinc-800 mb-3">
-                        <Search size={20} color="#9CA3AF" />
+                    {/* Basic Info */}
+                    <Animated.View entering={FadeInDown.delay(100).springify()} className="bg-card dark:bg-zinc-900 p-4 rounded-2xl mb-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                        <Text className="text-sm font-semibold text-textLight dark:text-zinc-400 mb-2 uppercase tracking-wider">Rezeptname</Text>
                         <TextInput
-                            value={searchQuery}
-                            onChangeText={setSearchQuery}
-                            onSubmitEditing={handleSearch}
-                            placeholder="Suchen nach Lebensmitteln..."
-                            className="flex-1 py-3 ml-2 text-base text-text dark:text-zinc-50"
+                            value={name}
+                            onChangeText={setName}
+                            placeholder="z.B. Avocado Toast"
+                            className="border-b border-gray-200 dark:border-zinc-700 py-3 text-lg font-medium text-text dark:text-zinc-50 outline-none"
                             placeholderTextColor="#9CA3AF"
-                            autoCapitalize="none"
-                            returnKeyType="search"
                         />
-                        <View
-                            onStartShouldSetResponder={() => true}
-                            onResponderRelease={() => router.push('/scanner')}
-                            className="ml-1 p-1.5 bg-primary/10 rounded-lg"
-                        >
-                            <ScanLine size={20} color="#2563EB" />
-                        </View>
-                    </View>
 
-                    {loading ? (
-                        <ActivityIndicator size="small" color="#2563EB" className="my-4" />
-                    ) : (
-                        searchResults.length > 0 ? (
-                            searchResults.map((item, index) => (
-                                <Animated.View key={item.id} entering={FadeInDown.delay(index * 30).springify()}>
+                        <View className="flex-row items-center justify-between mt-6 pt-4 border-t border-gray-100 dark:border-zinc-800">
+                            <View className="flex-row items-center gap-x-3">
+                                <View className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                    <Globe size={18} color="#2563EB" />
+                                </View>
+                                <View>
+                                    <Text className="text-base font-semibold text-text dark:text-zinc-50">Öffentlich teilen</Text>
+                                    <Text className="text-xs text-textLight dark:text-zinc-400">Für die Community sichtbar machen</Text>
+                                </View>
+                            </View>
+                            <CustomSwitch
+                                value={isPublic}
+                                onValueChange={setIsPublic}
+                            />
+                        </View>
+                    </Animated.View>
+
+                    {/* Current Ingredients */}
+                    {ingredients.length > 0 && (
+                        <Animated.View entering={FadeInDown.delay(150).springify()} className="bg-card dark:bg-zinc-900 p-4 rounded-2xl mb-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                            <Text className="text-sm font-semibold text-textLight dark:text-zinc-400 mb-3 uppercase tracking-wider">Zutaten</Text>
+                            {ingredients.map((ing) => (
+                                <View key={ing.id} className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-zinc-800 last:border-0">
+                                    <View className="flex-1 mr-4">
+                                        <Text className="text-base font-medium text-text dark:text-zinc-50 mb-1" numberOfLines={1}>{ing.name}</Text>
+                                        <Text className="text-sm text-textLight dark:text-zinc-400 font-medium">
+                                            {Math.round(ing.caloriesPer100g * ((ing.useServing && ing.servingQuantity ? ing.amount * ing.servingQuantity : ing.amount) / 100))} kcal
+                                            {ing.useServing && ing.servingSize ? ` • (${ing.servingSize})` : ''}
+                                        </Text>
+                                    </View>
+
+                                    <IngredientAmountInput
+                                        initialAmount={ing.amount}
+                                        initialUseServing={ing.useServing}
+                                        servingSize={ing.servingSize}
+                                        onUpdate={(val, useServ) => handleUpdateAmount(ing.id, val, useServ)}
+                                        unit={ing.unit || 'g'}
+                                    />
+
                                     <View
                                         onStartShouldSetResponder={() => true}
-                                        onResponderRelease={() => handleAddIngredient(item)}
-                                        className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-zinc-800 last:border-0"
+                                        onResponderRelease={() => handleRemoveIngredient(ing.id)}
+                                        className="p-2 bg-red-50 rounded-full"
                                     >
-                                        <View className="flex-1 mr-4">
-                                            <Text className="text-base font-medium text-text dark:text-zinc-50" numberOfLines={1}>{item.name}</Text>
-                                            <Text className="text-xs text-textLight dark:text-zinc-400">
-                                                {item.brand ? `${item.brand} • ` : ''}{item.calories} kcal/100g
-                                                {item.servingSize ? ` • Stück` : ''}
-                                            </Text>
-                                        </View>
-                                        <View className="flex-row items-center gap-x-2">
-                                            <View
-                                                onStartShouldSetResponder={() => true}
-                                                onResponderMove={() => { }} // dummy to prevent bubble
-                                                onResponderRelease={(e) => {
-                                                    e.stopPropagation();
-                                                    toggleFavorite(item);
-                                                }}
-                                                hitSlop={8}
-                                            >
-                                                <Star
-                                                    size={18}
-                                                    color={isFav(item.id) ? '#F59E0B' : '#D1D5DB'}
-                                                    fill={isFav(item.id) ? '#F59E0B' : 'none'}
-                                                />
-                                            </View>
-                                            <Plus size={20} color="#2563EB" />
-                                        </View>
+                                        <X size={16} color="#EF4444" />
                                     </View>
-                                </Animated.View>
-                            ))
-                        ) : searchQuery === '' ? (
-                            <View className="mt-2 text-text dark:text-zinc-50">
-                                {favoriteFoods.length > 0 && (
-                                    <>
-                                        <Text className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-2">⭐ Favoriten</Text>
-                                        {favoriteFoods.map(item => (
-                                            <View
-                                                key={item.id}
-                                                onStartShouldSetResponder={() => true}
-                                                onResponderRelease={() => handleAddIngredient(item)}
-                                                className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-zinc-800"
-                                            >
-                                                <View className="flex-1 mr-4">
-                                                    <Text className="text-base font-medium text-text dark:text-zinc-50" numberOfLines={1}>{item.name}</Text>
-                                                    <Text className="text-xs text-textLight dark:text-zinc-400">{item.calories} kcal/100g</Text>
-                                                </View>
-                                                <Plus size={20} color="#2563EB" />
+                                </View>
+                            ))}
+                        </Animated.View>
+                    )}
+
+                    {/* Search */}
+                    <Animated.View entering={FadeInDown.delay(200).springify()} className="bg-card dark:bg-zinc-900 p-4 rounded-2xl mb-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                        <Text className="text-sm font-semibold text-textLight dark:text-zinc-400 mb-3 uppercase tracking-wider">Zutat hinzufügen</Text>
+                        <View className="flex-row items-center border border-gray-200 dark:border-zinc-700 rounded-xl bg-gray-50 dark:bg-zinc-800 mb-3 overflow-hidden pl-3">
+                            <Search size={20} color="#9CA3AF" />
+                            <TextInput
+                                value={searchQuery}
+                                onChangeText={setSearchQuery}
+                                onSubmitEditing={handleSearch}
+                                placeholder="Suchen nach Lebensmitteln..."
+                                className="flex-1 py-3 ml-2 text-base text-text dark:text-zinc-50 outline-none"
+                                placeholderTextColor="#9CA3AF"
+                                autoCapitalize="none"
+                                returnKeyType="search"
+                            />
+                            <View
+                                onStartShouldSetResponder={() => true}
+                                onResponderRelease={() => handleSearch()}
+                                className="bg-primary px-4 py-3 h-full justify-center items-center ml-1"
+                                style={Platform.OS === 'web' ? { cursor: 'pointer' } as any : undefined}
+                            >
+                                <Text className="text-white font-bold text-sm uppercase tracking-widest">Suchen</Text>
+                            </View>
+                            <View
+                                onStartShouldSetResponder={() => true}
+                                onResponderRelease={() => router.push('/scanner')}
+                                className="p-3 bg-primary/10"
+                                style={Platform.OS === 'web' ? { cursor: 'pointer' } as any : undefined}
+                            >
+                                <ScanLine size={18} color="#2563EB" />
+                            </View>
+                        </View>
+
+                        {loading ? (
+                            <ActivityIndicator size="small" color="#2563EB" className="my-4" />
+                        ) : (
+                            searchResults.length > 0 ? (
+                                searchResults.map((item, index) => (
+                                    <Animated.View key={item.id} entering={FadeInDown.delay(index * 30).springify()}>
+                                        <View
+                                            onStartShouldSetResponder={() => true}
+                                            onResponderRelease={() => handleAddIngredient(item)}
+                                            className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-zinc-800 last:border-0"
+                                        >
+                                            <View className="flex-1 mr-4">
+                                                <Text className="text-base font-medium text-text dark:text-zinc-50" numberOfLines={1}>{item.name}</Text>
+                                                <Text className="text-xs text-textLight dark:text-zinc-400">
+                                                    {item.brand ? `${item.brand} • ` : ''}{item.calories} kcal/100g
+                                                    {item.servingSize ? ` • Stück` : ''}
+                                                </Text>
                                             </View>
-                                        ))}
-                                    </>
-                                )}
-                                {recentFoods.length > 0 && (
-                                    <>
-                                        <Text className="text-xs font-bold text-textLight dark:text-zinc-400 uppercase tracking-widest mb-2 mt-3">Zuletzt verwendet</Text>
-                                        {recentFoods.slice(0, 5).map(item => (
-                                            <View
-                                                key={item.id}
-                                                onStartShouldSetResponder={() => true}
-                                                onResponderRelease={() => handleAddIngredient(item)}
-                                                className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-zinc-800"
-                                            >
-                                                <View className="flex-1 mr-4">
-                                                    <Text className="text-base font-medium text-text dark:text-zinc-50" numberOfLines={1}>{item.name}</Text>
-                                                    <Text className="text-xs text-textLight dark:text-zinc-400">{item.calories} kcal/100g</Text>
-                                                </View>
-                                                <Plus size={20} color="#2563EB" />
-                                            </View>
-                                        ))}
-                                    </>
-                                )}
-                                {savedRecipes.length > 0 && (
-                                    <View className="mt-3">
-                                        <Text className="text-xs font-bold text-textLight dark:text-zinc-400 uppercase tracking-widest mb-3">Gespeicherte Rezepte</Text>
-                                        {savedRecipes.map((recipe) => (
-                                            <View key={recipe.id} className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-zinc-800 last:border-0">
-                                                <View className="flex-1 pr-4">
-                                                    <Text className="text-base font-medium text-text dark:text-zinc-50">{recipe.name}</Text>
-                                                    <Text className="text-xs text-textLight dark:text-zinc-400">{recipe.totalCalories} kcal • {recipe.ingredients.length} Zutaten</Text>
-                                                </View>
+                                            <View className="flex-row items-center gap-x-2">
                                                 <View
                                                     onStartShouldSetResponder={() => true}
-                                                    onResponderRelease={() => {
-                                                        if (defaultMeal) {
-                                                            addLog({ meal_type: defaultMeal as any, name: recipe.name, calories: recipe.totalCalories, protein: recipe.totalProtein, carbs: recipe.totalCarbs, fat: recipe.totalFat });
-                                                            router.back();
-                                                        } else {
-                                                            setIngredients([...ingredients, ...recipe.ingredients]);
-                                                        }
+                                                    onResponderMove={() => { }} // dummy to prevent bubble
+                                                    onResponderRelease={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleFavorite(item);
                                                     }}
-                                                    className="bg-primary/10 px-3 py-1.5 rounded-full"
+                                                    hitSlop={8}
                                                 >
-                                                    <Text className="text-primary text-xs font-bold">{defaultMeal ? 'Hinzufügen' : 'Zutaten'}</Text>
+                                                    <Star
+                                                        size={18}
+                                                        color={isFav(item.id) ? '#F59E0B' : '#D1D5DB'}
+                                                        fill={isFav(item.id) ? '#F59E0B' : 'none'}
+                                                    />
                                                 </View>
+                                                <Plus size={20} color="#2563EB" />
                                             </View>
-                                        ))}
-                                    </View>
-                                )}
-                            </View>
-                        ) : null
-                    )}
-                </Animated.View>
+                                        </View>
+                                    </Animated.View>
+                                ))
+                            ) : searchQuery === '' ? (
+                                <View className="mt-2 text-text dark:text-zinc-50">
+                                    {favoriteFoods.length > 0 && (
+                                        <>
+                                            <Text className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-2">⭐ Favoriten</Text>
+                                            {favoriteFoods.map(item => (
+                                                <View
+                                                    key={item.id}
+                                                    onStartShouldSetResponder={() => true}
+                                                    onResponderRelease={() => handleAddIngredient(item)}
+                                                    className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-zinc-800"
+                                                >
+                                                    <View className="flex-1 mr-4">
+                                                        <Text className="text-base font-medium text-text dark:text-zinc-50" numberOfLines={1}>{item.name}</Text>
+                                                        <Text className="text-xs text-textLight dark:text-zinc-400">{item.calories} kcal/100g</Text>
+                                                    </View>
+                                                    <Plus size={20} color="#2563EB" />
+                                                </View>
+                                            ))}
+                                        </>
+                                    )}
+                                    {recentFoods.length > 0 && (
+                                        <>
+                                            <Text className="text-xs font-bold text-textLight dark:text-zinc-400 uppercase tracking-widest mb-2 mt-3">Zuletzt verwendet</Text>
+                                            {recentFoods.slice(0, 5).map(item => (
+                                                <View
+                                                    key={item.id}
+                                                    onStartShouldSetResponder={() => true}
+                                                    onResponderRelease={() => handleAddIngredient(item)}
+                                                    className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-zinc-800"
+                                                >
+                                                    <View className="flex-1 mr-4">
+                                                        <Text className="text-base font-medium text-text dark:text-zinc-50" numberOfLines={1}>{item.name}</Text>
+                                                        <Text className="text-xs text-textLight dark:text-zinc-400">{item.calories} kcal/100g</Text>
+                                                    </View>
+                                                    <Plus size={20} color="#2563EB" />
+                                                </View>
+                                            ))}
+                                        </>
+                                    )}
+                                    {savedRecipes.length > 0 && (
+                                        <View className="mt-3">
+                                            <Text className="text-xs font-bold text-textLight dark:text-zinc-400 uppercase tracking-widest mb-3">Gespeicherte Rezepte</Text>
+                                            {savedRecipes.map((recipe) => (
+                                                <View key={recipe.id} className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-zinc-800 last:border-0">
+                                                    <View className="flex-1 pr-4">
+                                                        <Text className="text-base font-medium text-text dark:text-zinc-50">{recipe.name}</Text>
+                                                        <Text className="text-xs text-textLight dark:text-zinc-400">{recipe.totalCalories} kcal • {recipe.ingredients.length} Zutaten</Text>
+                                                    </View>
+                                                    <View
+                                                        onStartShouldSetResponder={() => true}
+                                                        onResponderRelease={() => {
+                                                            if (defaultMeal) {
+                                                                addLog({ meal_type: defaultMeal as any, name: recipe.name, calories: recipe.totalCalories, protein: recipe.totalProtein, carbs: recipe.totalCarbs, fat: recipe.totalFat });
+                                                                router.back();
+                                                            } else {
+                                                                setIngredients([...ingredients, ...recipe.ingredients]);
+                                                            }
+                                                        }}
+                                                        className="bg-primary/10 px-3 py-1.5 rounded-full"
+                                                    >
+                                                        <Text className="text-primary text-xs font-bold">{defaultMeal ? 'Hinzufügen' : 'Zutaten'}</Text>
+                                                    </View>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    )}
+                                </View>
+                            ) : null
+                        )}
+                    </Animated.View>
 
-                <Animated.View entering={FadeInDown.delay(300).springify()}>
-                    <View
-                        onStartShouldSetResponder={() => !(!name || ingredients.length === 0)}
-                        onResponderRelease={() => {
-                            if (!name || ingredients.length === 0) return;
-                            haptics.success();
-                            handleSaveRecipe();
-                        }}
-                        className={`py-4 rounded-xl items-center mb-8 ${(!name || ingredients.length === 0) ? 'bg-blue-300' : 'bg-primary'}`}
-                    >
-                        <Text className="text-white font-bold text-lg">{editId ? 'Änderungen speichern' : 'Rezept speichern'}</Text>
-                    </View>
-                </Animated.View>
-            </ScrollView>
-        </SafeAreaView>
+                    <Animated.View entering={FadeInDown.delay(300).springify()}>
+                        <View
+                            onStartShouldSetResponder={() => !(!name || ingredients.length === 0)}
+                            onResponderRelease={() => {
+                                if (!name || ingredients.length === 0) return;
+                                haptics.success();
+                                handleSaveRecipe();
+                            }}
+                            className={`py-4 rounded-xl items-center mb-8 ${(!name || ingredients.length === 0) ? 'bg-blue-300' : 'bg-primary'}`}
+                        >
+                            <Text className="text-white font-bold text-lg">{editId ? 'Änderungen speichern' : 'Rezept speichern'}</Text>
+                        </View>
+                    </Animated.View>
+                </ScrollView>
+            </SafeAreaView>
+        </View>
     );
 }

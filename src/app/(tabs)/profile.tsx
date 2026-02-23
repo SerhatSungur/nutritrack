@@ -2,7 +2,7 @@ import {
     View, Text, TextInput, ScrollView,
     Pressable, Keyboard, Appearance,
     Modal, ActivityIndicator, Dimensions,
-    TouchableOpacity,
+    TouchableOpacity, Platform
 } from 'react-native';
 import { memo } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -230,8 +230,17 @@ const AnalyticsSection = ({ isDark }: { isDark: boolean }) => {
     const weightData = weightHistory.slice(-7);
     const waterData = waterHistory.slice(-7);
 
+    const [chartWidth, setChartWidth] = useState(SCREEN_WIDTH - 80);
+
     return (
-        <View className="bg-card dark:bg-zinc-900 rounded-3xl p-6 mb-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+        <View
+            className="bg-card dark:bg-zinc-900 rounded-3xl p-6 mb-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)]"
+            onLayout={(e) => {
+                const { width } = e.nativeEvent.layout;
+                // Padding 24px on each side = 48px total padding inside the card
+                setChartWidth(Math.max(200, width - 48));
+            }}
+        >
             <View className="flex-row items-center gap-x-2 mb-6">
                 <Activity size={22} color="#3B82F6" />
                 <Text className="text-lg font-extrabold text-text dark:text-zinc-50">Trend-Analyse</Text>
@@ -246,7 +255,7 @@ const AnalyticsSection = ({ isDark }: { isDark: boolean }) => {
                         </Text>
                     )}
                 </View>
-                <LineChart data={weightData} width={SCREEN_WIDTH - 80} isDark={isDark} color="#6366F1" />
+                <LineChart data={weightData} width={chartWidth} isDark={isDark} color="#6366F1" />
             </View>
 
             <View>
@@ -258,7 +267,7 @@ const AnalyticsSection = ({ isDark }: { isDark: boolean }) => {
                         </Text>
                     )}
                 </View>
-                <LineChart data={waterData} width={SCREEN_WIDTH - 80} isDark={isDark} color="#3B82F6" />
+                <LineChart data={waterData} width={chartWidth} isDark={isDark} color="#3B82F6" />
             </View>
         </View>
     );
@@ -496,13 +505,14 @@ export default function ProfileScreen() {
                         <View className="flex-row items-center justify-between mb-8">
                             <View className="flex-row items-center gap-x-3">
                                 <View className="w-1 h-6 bg-amber-400 rounded-full" />
-                                <Text className="text-xs font-black text-textLight dark:text-zinc-500 uppercase tracking-[4px]">Einstell.</Text>
+                                <Text className="text-xs font-black text-textLight dark:text-zinc-500 uppercase tracking-[4px]">Einstellungen</Text>
                             </View>
                             <TouchableOpacity
                                 onPress={handleToggleDark}
                                 className="bg-zinc-100 dark:bg-zinc-800 p-3 rounded-2xl"
+                                style={Platform.OS === 'web' ? { cursor: 'pointer' } as any : undefined}
                             >
-                                {isDark ? <Sun size={20} color="#F59E0B" /> : <Moon size={20} color="#6366F1" />}
+                                {isDark ? <Sun size={20} color="#FBBF24" strokeWidth={2.5} /> : <Moon size={20} color="#6366F1" strokeWidth={2} />}
                             </TouchableOpacity>
                         </View>
 

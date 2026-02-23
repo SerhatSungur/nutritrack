@@ -268,7 +268,8 @@ export default function LoginScreen() {
                         <View
                             onStartShouldSetResponder={() => true}
                             onResponderRelease={() => router.back()}
-                            className="w-10 h-10 items-center justify-center rounded-full bg-white dark:bg-zinc-800 shadow-sm mb-10"
+                            className="w-10 h-10 items-center justify-center rounded-full bg-white dark:bg-zinc-800 shadow-sm mb-10 cursor-pointer"
+                            style={{ cursor: 'pointer' } as any}
                         >
                             <ChevronLeft size={24} color={isDark ? '#FAFAFA' : '#09090B'} />
                         </View>
@@ -297,7 +298,7 @@ export default function LoginScreen() {
                                     <TextInput
                                         placeholder="name@beispiel.de"
                                         placeholderTextColor="#A1A1AA"
-                                        className="flex-1 text-text dark:text-zinc-100 text-[16px] font-medium ml-2"
+                                        className="flex-1 text-text dark:text-zinc-100 text-[16px] font-medium ml-2 outline-none"
                                         value={email}
                                         onChangeText={setEmail}
                                         autoCapitalize="none"
@@ -315,11 +316,11 @@ export default function LoginScreen() {
                                     className={`flex-row items-center bg-white dark:bg-zinc-900 rounded-2xl border px-4 py-3.5 shadow-sm transition-all ${focusedField === 'password' ? 'border-primary shadow-md shadow-blue-500/5' : 'border-gray-100 dark:border-zinc-800'
                                         }`}
                                 >
-                                    <Lock size={18} color={focusedField === 'password' ? '#2563EB' : '#71717A'} className="mr-6" />
+                                    <Lock size={18} color={focusedField === 'password' ? '#2563EB' : '#71717A'} />
                                     <TextInput
                                         placeholder="••••••••"
                                         placeholderTextColor="#A1A1AA"
-                                        className="flex-1 text-text dark:text-zinc-100 text-[16px] font-medium ml-2"
+                                        className="flex-1 text-text dark:text-zinc-100 text-[16px] font-medium ml-2 outline-none"
                                         value={password}
                                         onChangeText={setPassword}
                                         secureTextEntry
@@ -339,9 +340,10 @@ export default function LoginScreen() {
                                     alignItems: 'center',
                                     flexDirection: 'row',
                                     justifyContent: 'center',
-                                    opacity: isLoading ? 0.7 : 1
-                                }}
-                                className="shadow-lg shadow-blue-500/30"
+                                    opacity: isLoading ? 0.7 : 1,
+                                    cursor: isLoading ? 'default' : 'pointer'
+                                } as any}
+                                className="shadow-lg shadow-blue-500/30 cursor-pointer"
                             >
                                 {isLoading ? (
                                     <ActivityIndicator color="#FFFFFF" />
@@ -384,7 +386,9 @@ export default function LoginScreen() {
                                     alignItems: 'center',
                                     flexDirection: 'row',
                                     justifyContent: 'center',
-                                }}
+                                    cursor: 'pointer'
+                                } as any}
+                                className="cursor-pointer"
                             >
                                 <GoogleIcon />
                                 <Text className="text-text dark:text-zinc-50 font-bold text-[16px]">
@@ -404,8 +408,10 @@ export default function LoginScreen() {
                                     haptics.selection();
                                     setMode(mode === 'login' ? 'signup' : 'login');
                                 }}
+                                className="cursor-pointer"
+                                style={{ cursor: 'pointer' } as any}
                             >
-                                <Text className="text-textLight dark:text-zinc-400">
+                                <Text className="text-textLight dark:text-zinc-400 py-4">
                                     {mode === 'login' ? 'Noch keinen Account? ' : 'Bereits Mitglied? '}
                                     <Text className="text-primary font-bold">
                                         {mode === 'login' ? 'Jetzt registrieren' : 'Hier anmelden'}

@@ -89,8 +89,8 @@ export default function RootLayout() {
                     <Stack.Screen
                         name="recipes/create"
                         options={{
-                            presentation: 'modal',
-                            title: 'Create Recipe',
+                            presentation: 'transparentModal',
+                            animation: 'slide_from_right',
                             headerShown: false
                         }}
                     />
