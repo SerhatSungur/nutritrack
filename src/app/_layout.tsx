@@ -12,6 +12,8 @@ import { useEffect, useState } from "react";
 import { SafeAreaProvider, initialWindowMetrics } from "react-native-safe-area-context";
 import { useAuthStore } from "../store/useAuthStore";
 import { syncService } from "../lib/syncService";
+import { supabase } from "../lib/supabase";
+import { router } from "expo-router";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -60,6 +62,33 @@ export default function RootLayout() {
             syncService.pullAll();
         }
     }, [authInitialized, user]);
+
+    // Handle Supabase Web OAuth Redirect Hash
+    useEffect(() => {
+        if (Platform.OS === 'web') {
+            const hash = window.location.hash;
+            if (hash && hash.includes('access_token=')) {
+                // Supabase redirects with a hash like #access_token=...&refresh_token=...
+                // Expo Router breaks on this. We need to parse it manually and set the session.
+                const params = new URLSearchParams(hash.substring(1)); // Remove the '#'
+                const accessToken = params.get('access_token');
+                const refreshToken = params.get('refresh_token');
+
+                if (accessToken && refreshToken) {
+                    supabase.auth.setSession({
+                        access_token: accessToken,
+                        refresh_token: refreshToken
+                    }).then(({ data, error }: { data: any, error: any }) => {
+                        if (!error && data.session) {
+                            // Clear the hash without reloading so Expo Router accepts the path
+                            window.history.replaceState(null, '', window.location.pathname);
+                            router.replace('/(tabs)');
+                        }
+                    });
+                }
+            }
+        }
+    }, []);
 
     // Hide splash screen when fonts are loaded
     useEffect(() => {
